@@ -1,0 +1,6 @@
+{
+  "name": "EasyMart - C2C Essentials Marketplace India",
+  "description": "Peer-to-peer Indian marketplace for everyday essentials, home goods, books, and lightweight products with UPI payments and escrow protection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
