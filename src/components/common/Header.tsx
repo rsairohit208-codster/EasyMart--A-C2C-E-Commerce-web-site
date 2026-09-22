@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MAJOR_INDIAN_CITIES } from '../../data/seedData';
+import { AvatarPlaceholder } from './AvatarPlaceholder';
 
 export const Header: React.FC = () => {
   const { 
@@ -91,7 +92,7 @@ export const Header: React.FC = () => {
                       className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-neutral-50 ${u.id === currentUser.id ? 'bg-emerald-50 text-emerald-800 font-medium' : ''}`}
                     >
                       <div className="flex items-center gap-2">
-                        <img src={u.avatar} alt="" className="w-6 h-6 rounded-full object-cover border border-neutral-200" />
+                        <AvatarPlaceholder name={u.name} avatar={u.avatar} size="xs" />
                         <div>
                           <div className="font-semibold text-neutral-900">{u.name}</div>
                           <div className="text-[11px] text-neutral-500 capitalize">{u.role} • {u.city}</div>
@@ -290,18 +291,14 @@ export const Header: React.FC = () => {
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-2 p-1 pl-1.5 rounded-xl hover:bg-neutral-100 transition border border-transparent hover:border-neutral-200"
               >
-                <img 
-                  src={currentUser.avatar} 
-                  alt={currentUser.name} 
-                  className="w-8 h-8 rounded-full object-cover border border-neutral-200"
-                />
+                <AvatarPlaceholder name={currentUser.name} avatar={currentUser.avatar} size="sm" />
                 <ChevronDown className="w-3.5 h-3.5 text-neutral-500 hidden sm:block" />
               </button>
 
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-neutral-200 py-2 z-50 text-xs">
                   <div className="px-4 py-2.5 border-b border-neutral-100 flex items-center gap-3">
-                    <img src={currentUser.avatar} alt="" className="w-9 h-9 rounded-full object-cover border" />
+                    <AvatarPlaceholder name={currentUser.name} avatar={currentUser.avatar} size="sm" />
                     <div className="overflow-hidden">
                       <p className="font-bold text-neutral-900 truncate">{currentUser.name}</p>
                       <p className="text-[11px] text-neutral-500 truncate">{currentUser.email}</p>

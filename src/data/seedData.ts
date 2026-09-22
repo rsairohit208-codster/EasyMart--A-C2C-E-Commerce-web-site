@@ -110,7 +110,7 @@ export const INITIAL_USERS: User[] = [
     name: 'Aarav Sharma',
     email: 'aarav.sharma@example.in',
     phone: '+91 98201 44512',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
+    avatar: '',
     city: 'Bengaluru',
     state: 'Karnataka',
     rating: 4.9,

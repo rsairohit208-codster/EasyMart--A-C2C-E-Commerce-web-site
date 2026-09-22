@@ -9,7 +9,7 @@ export type ListingStatus = 'active' | 'sold' | 'reserved' | 'under_review';
 export interface UserSummary {
   id: string;
   name: string;
-  avatar: string;
+  avatar?: string;
   city: string;
   state: string;
   rating: number;
@@ -92,7 +92,7 @@ export interface Review {
   targetId: string;
   authorId: string;
   authorName: string;
-  authorAvatar: string;
+  authorAvatar?: string;
   rating: number;
   comment: string;
   date: string;

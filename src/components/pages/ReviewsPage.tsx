@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, CheckCircle2, MessageSquare, ThumbsUp, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
 export const ReviewsPage: React.FC = () => {
   const { reviews, products, navigateTo } = useApp();
@@ -67,10 +68,10 @@ export const ReviewsPage: React.FC = () => {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img
-                  src={rev.authorAvatar}
-                  alt={rev.authorName}
-                  className="w-10 h-10 rounded-full object-cover border"
+                <AvatarPlaceholder
+                  name={rev.authorName}
+                  avatar={rev.authorAvatar}
+                  size="md"
                 />
                 <div>
                   <h4 className="font-bold text-xs text-neutral-900">{rev.authorName}</h4>

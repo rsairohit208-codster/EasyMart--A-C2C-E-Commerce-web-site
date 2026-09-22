@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './HomePage';
+import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
 export const ProductDetailPage: React.FC = () => {
   const { 
@@ -97,7 +98,7 @@ export const ProductDetailPage: React.FC = () => {
       targetId: product.sellerId,
       authorId: currentUser.id,
       authorName: currentUser.name,
-      authorAvatar: currentUser.avatar,
+      authorAvatar: currentUser.avatar || '',
       rating: ratingVal,
       comment: reviewComment.trim(),
       verifiedPurchase: true
@@ -300,10 +301,10 @@ export const ProductDetailPage: React.FC = () => {
               onClick={() => navigateTo('seller-profile', { sellerId: product.sellerId })}
               className="flex items-center gap-3 cursor-pointer group"
             >
-              <img 
-                src={product.seller.avatar} 
-                alt={product.seller.name} 
-                className="w-12 h-12 rounded-full object-cover border border-neutral-200"
+              <AvatarPlaceholder 
+                name={product.seller.name} 
+                avatar={product.seller.avatar} 
+                size="md" 
               />
               <div>
                 <div className="flex items-center gap-1.5">
@@ -393,7 +394,11 @@ export const ProductDetailPage: React.FC = () => {
             <div key={rev.id} className="p-4 bg-white rounded-2xl border border-neutral-200/80 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <img src={rev.authorAvatar} alt="" className="w-8 h-8 rounded-full object-cover border" />
+                  <AvatarPlaceholder 
+                    name={rev.authorName} 
+                    avatar={rev.authorAvatar} 
+                    size="sm" 
+                  />
                   <div>
                     <h5 className="font-bold text-xs text-neutral-900">{rev.authorName}</h5>
                     <span className="text-[10px] text-neutral-400">{rev.date}</span>

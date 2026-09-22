@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './HomePage';
+import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
 export const SellerProfilePage: React.FC = () => {
   const { 
@@ -39,10 +40,11 @@ export const SellerProfilePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           
           <div className="flex items-center gap-4 sm:gap-6">
-            <img 
-              src={seller.avatar} 
-              alt={seller.name} 
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-emerald-500 shadow-md"
+            <AvatarPlaceholder 
+              name={seller.name} 
+              avatar={seller.avatar} 
+              size="xl" 
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl"
             />
             <div className="space-y-1">
               <div className="flex items-center gap-2">

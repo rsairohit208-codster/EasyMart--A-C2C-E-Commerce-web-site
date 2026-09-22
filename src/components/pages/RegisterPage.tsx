@@ -1,23 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   User, Mail, Phone, MapPin, Lock, 
-  ArrowRight, ShieldCheck, CheckCircle2 
+  ArrowRight, ShieldCheck, CheckCircle2,
+  Camera, Upload, X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { INDIAN_STATES, MAJOR_INDIAN_CITIES } from '../../data/seedData';
 
 export const RegisterPage: React.FC = () => {
   const { registerUser, navigateTo, showToast } = useApp();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [avatar, setAvatar] = useState('');
   const [city, setCity] = useState('Bengaluru');
   const [state, setState] = useState('Karnataka');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'buyer' | 'seller'>('seller');
   const [agreed, setAgreed] = useState(true);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size should be under 5MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setAvatar(reader.result);
+        showToast('Photo added! (Optional)');
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +62,7 @@ export const RegisterPage: React.FC = () => {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
+      avatar: avatar.trim(),
       city,
       state,
       role
@@ -75,6 +104,81 @@ export const RegisterPage: React.FC = () => {
               <span>Buy &amp; Save Money</span>
               <span className="text-[10px] font-normal text-neutral-500">Escrow protected checkout</span>
             </button>
+          </div>
+        </div>
+
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept="image/*"
+          className="hidden"
+          id="register-photo-input"
+        />
+
+        {/* Optional Profile Photo - Reserved Slot */}
+        <div className="p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200/80">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-bold text-neutral-700">
+              Profile Photo (Optional)
+            </label>
+            <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+              Reserved Place
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3.5">
+            {avatar ? (
+              <div className="relative group shrink-0">
+                <img
+                  src={avatar}
+                  alt="Preview"
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setAvatar('')}
+                  className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-0.5 hover:bg-rose-600"
+                  title="Remove photo"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-14 h-14 rounded-2xl border-2 border-dashed border-emerald-400 bg-emerald-50/50 hover:bg-emerald-50 transition cursor-pointer flex flex-col items-center justify-center shrink-0 group"
+                title="Click to select photo"
+              >
+                <Camera className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <p className="text-xs text-neutral-600">
+                {avatar ? 'Custom photo ready' : 'No permanent photo required. Add a photo or leave it empty.'}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-white border border-neutral-300 hover:bg-neutral-50 px-2.5 py-1 rounded-lg transition inline-flex items-center gap-1"
+                >
+                  <Upload className="w-3 h-3" />
+                  <span>{avatar ? 'Change' : 'Choose Photo'}</span>
+                </button>
+                {avatar && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatar('')}
+                    className="text-xs font-medium text-rose-600 hover:underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

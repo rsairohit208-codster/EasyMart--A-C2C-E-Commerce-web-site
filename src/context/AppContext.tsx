@@ -37,6 +37,8 @@ interface AppContextType {
   loginUser: (email: string, role?: 'buyer' | 'seller' | 'admin') => boolean;
   registerUser: (userData: Partial<User>) => void;
   updateUserProfile: (updates: Partial<User>) => void;
+  updateProfilePhoto: (photoUrl: string) => void;
+  removeProfilePhoto: () => void;
   addSavedAddress: (address: Omit<Address, 'id'>) => void;
   updateSavedAddress: (address: Address) => void;
   deleteSavedAddress: (addressId: string) => void;
@@ -179,7 +181,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Users
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.USERS);
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
+    if (saved) {
+      try {
+        const parsed: User[] = JSON.parse(saved);
+        return parsed.map(u => {
+          if (u.id === 'usr-buyer-demo' && u.avatar?.includes('photo-1535713875002')) {
+            return { ...u, avatar: '' };
+          }
+          return u;
+        });
+      } catch {
+        return INITIAL_USERS;
+      }
+    }
+    return INITIAL_USERS;
   });
 
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
@@ -379,7 +394,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: formattedName,
       email,
       phone: '+91 98765 43210',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+      avatar: '',
       city: 'Bengaluru',
       state: 'Karnataka',
       rating: 5.0,
@@ -417,7 +432,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: userData.name || 'New Member',
       email: userData.email || 'user@example.in',
       phone: userData.phone || '+91 98765 43210',
-      avatar: userData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
+      avatar: userData.avatar || '',
       city: userData.city || 'Mumbai',
       state: userData.state || 'Maharashtra',
       rating: 5.0,
@@ -439,6 +454,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateUserProfile = (updates: Partial<User>) => {
     setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, ...updates } : u));
     showToast('Profile updated successfully!');
+  };
+
+  const updateProfilePhoto = (photoUrl: string) => {
+    setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, avatar: photoUrl } : u));
+    showToast('Profile photo updated!');
+  };
+
+  const removeProfilePhoto = () => {
+    setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, avatar: '' } : u));
+    showToast('Profile photo removed. You can upload one anytime.', 'info');
   };
 
   const addSavedAddress = (addressData: Omit<Address, 'id'>) => {
@@ -885,6 +910,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loginUser,
         registerUser,
         updateUserProfile,
+        updateProfilePhoto,
+        removeProfilePhoto,
         addSavedAddress,
         updateSavedAddress,
         deleteSavedAddress,
