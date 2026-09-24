@@ -104,7 +104,7 @@ export const CATEGORIES: ProductCategory[] = [
   }
 ];
 
-export const INITIAL_USERS: User[] = [
+export const SAMPLE_STARTER_USERS: User[] = [
   {
     id: 'usr-buyer-demo',
     name: 'Aarav Sharma',
@@ -229,7 +229,7 @@ export const INITIAL_USERS: User[] = [
   }
 ];
 
-export const INITIAL_PRODUCTS: Product[] = [
+export const SAMPLE_STARTER_PRODUCTS: Product[] = [
   {
     id: 'prod-1',
     title: 'Indian Polity by M. Laxmikanth (7th Edition) - Clean Condition',
@@ -652,7 +652,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   }
 ];
 
-export const INITIAL_REVIEWS: Review[] = [
+export const SAMPLE_STARTER_REVIEWS: Review[] = [
   {
     id: 'rev-1',
     targetType: 'seller',
@@ -691,7 +691,7 @@ export const INITIAL_REVIEWS: Review[] = [
   }
 ];
 
-export const INITIAL_ORDERS: Order[] = [
+export const SAMPLE_STARTER_ORDERS: Order[] = [
   {
     id: 'ord-101',
     orderNumber: 'EM-IN-78219',
@@ -739,7 +739,7 @@ export const INITIAL_ORDERS: Order[] = [
   }
 ];
 
-export const INITIAL_CONVERSATIONS: Conversation[] = [
+export const SAMPLE_STARTER_CONVERSATIONS: Conversation[] = [
   {
     id: 'conv-1',
     productId: 'prod-1',
@@ -770,7 +770,7 @@ export const INITIAL_CONVERSATIONS: Conversation[] = [
   }
 ];
 
-export const INITIAL_CHAT_MESSAGES: Record<string, ChatMessage[]> = {
+export const SAMPLE_STARTER_CHAT_MESSAGES: Record<string, ChatMessage[]> = {
   'conv-1': [
     {
       id: 'm-1',
@@ -839,7 +839,7 @@ export const INITIAL_CHAT_MESSAGES: Record<string, ChatMessage[]> = {
   ]
 };
 
-export const INITIAL_NOTIFICATIONS: Notification[] = [
+export const SAMPLE_STARTER_NOTIFICATIONS: Notification[] = [
   {
     id: 'notif-1',
     userId: 'usr-buyer-demo',
@@ -872,3 +872,14 @@ export const INITIAL_NOTIFICATIONS: Notification[] = [
     timestamp: '3 days ago'
   }
 ];
+
+// 100% REAL-WORLD EMPTY REPOSITORIES FOR COMMUNITY LAUNCH
+// All lists start pristine and reserved for genuine peer-to-peer users
+export const INITIAL_USERS: User[] = [];
+export const INITIAL_PRODUCTS: Product[] = [];
+export const INITIAL_ORDERS: Order[] = [];
+export const INITIAL_CONVERSATIONS: Conversation[] = [];
+export const INITIAL_CHAT_MESSAGES: Record<string, ChatMessage[]> = {};
+export const INITIAL_NOTIFICATIONS: Notification[] = [];
+export const INITIAL_REVIEWS: Review[] = [];
+

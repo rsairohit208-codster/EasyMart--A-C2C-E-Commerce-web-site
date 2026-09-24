@@ -165,19 +165,53 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {featuredProducts.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              isWishlisted={isWishlisted(product.id)}
-              onToggleWishlist={() => requireAuth('save this product to your wishlist', () => toggleWishlist(product.id))}
-              onClick={() => navigateTo('product-details', { productId: product.id })}
-              onQuickBuy={(e) => {
-                e.stopPropagation();
-                requireAuth('buy this product with escrow', () => openPaymentModal(product));
-              }}
-            />
-          ))}
+          {featuredProducts.length === 0 ? (
+            <div className="col-span-full bg-white rounded-3xl border border-neutral-200/90 p-8 sm:p-12 text-center space-y-4 shadow-xs">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto border border-emerald-100">
+                <Package className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  Community Marketplace Live 🇮🇳
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-900 font-display pt-1">
+                  Be the First Neighbor to Post an Ad!
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-500 max-w-lg mx-auto leading-relaxed">
+                  All demo products have been cleared. EasyMart is 100% reserved for genuine real-world users buying and selling pre-loved study books, kitchen gadgets, mobile accessories, and home items with escrow protection.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => requireAuth('post a free ad', () => navigateTo('post-item'))}
+                  className="w-full sm:w-auto px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2"
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Post the First Ad (+ Sell Free)</span>
+                </button>
+                <button
+                  onClick={() => navigateTo('categories')}
+                  className="w-full sm:w-auto px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs sm:text-sm rounded-xl transition"
+                >
+                  Browse Category Taxonomy
+                </button>
+              </div>
+            </div>
+          ) : (
+            featuredProducts.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                isWishlisted={isWishlisted(product.id)}
+                onToggleWishlist={() => requireAuth('save this product to your wishlist', () => toggleWishlist(product.id))}
+                onClick={() => navigateTo('product-details', { productId: product.id })}
+                onQuickBuy={(e) => {
+                  e.stopPropagation();
+                  requireAuth('buy this product with escrow', () => openPaymentModal(product));
+                }}
+              />
+            ))
+          )}
         </div>
       </section>
 

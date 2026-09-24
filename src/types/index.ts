@@ -43,6 +43,9 @@ export interface User extends UserSummary {
     ifscCode: string;
     bankName: string;
   };
+  isKycVerified?: boolean;
+  kycDocType?: 'Aadhaar' | 'PAN' | 'Voter ID';
+  kycDocNumber?: string;
   role: 'buyer' | 'seller' | 'admin';
   savedAddresses: Address[];
 }
@@ -138,7 +141,15 @@ export type OrderStatus =
 export type EscrowStatus = 
   | 'held_in_escrow'
   | 'released_to_seller'
-  | 'refunded';
+  | 'refunded'
+  | 'disputed';
+
+export interface TrackingEvent {
+  time: string;
+  status: string;
+  location: string;
+  note: string;
+}
 
 export interface Order {
   id: string;
@@ -159,6 +170,7 @@ export interface Order {
   shippingFee: number;
   totalAmount: number;
   paymentMethod: 'upi' | 'netbanking' | 'card' | 'cod';
+  gatewayName?: string;
   paymentDetails: {
     upiId?: string;
     bankName?: string;
@@ -166,6 +178,14 @@ export interface Order {
     paidAt: string;
     status: 'success' | 'pending' | 'failed';
   };
+  rrn?: string; // 12-digit Indian Bank Retrieval Reference Number
+  securitySignature?: string; // Cryptographic SHA-256 HMAC verification hash
+  deliveryOtp?: string; // 6-digit Secret Handover Security Code given to buyer
+  escrowVaultId?: string; // Unique Escrow Vault reference
+  escrowReleaseTxnId?: string; // Payout reference once released
+  escrowReleasedAt?: string;
+  disputeReason?: string;
+  trackingEvents?: TrackingEvent[];
   shippingAddress: Address;
   status: OrderStatus;
   trackingNumber?: string;

@@ -28,6 +28,14 @@ export const MyProfilePage: React.FC = () => {
   const [addressLine1, setAddressLine1] = useState(defaultAddr?.addressLine1 || '');
   const [pincode, setPincode] = useState(defaultAddr?.pincode || '');
 
+  // Bank & KYC Verification for Real World Users
+  const [bankAccountNumber, setBankAccountNumber] = useState(currentUser.bankAccount?.accountNumber || '');
+  const [bankIfsc, setBankIfsc] = useState(currentUser.bankAccount?.ifscCode || '');
+  const [bankName, setBankName] = useState(currentUser.bankAccount?.bankName || '');
+  const [isKycVerified, setIsKycVerified] = useState(currentUser.isKycVerified ?? currentUser.isVerified ?? false);
+  const [kycDocType, setKycDocType] = useState<'Aadhaar' | 'PAN' | 'Voter ID'>(currentUser.kycDocType || 'PAN');
+  const [kycDocNumber, setKycDocNumber] = useState(currentUser.kycDocNumber || '');
+
   // Handle local file upload (converts to base64 Data URL for persistent preview)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,6 +100,15 @@ export const MyProfilePage: React.FC = () => {
       state,
       bio: bio.trim(),
       upiId: upiId.trim(),
+      bankAccount: bankAccountNumber.trim() ? {
+        accountNumber: bankAccountNumber.trim(),
+        ifscCode: bankIfsc.trim().toUpperCase(),
+        bankName: bankName.trim()
+      } : undefined,
+      isKycVerified,
+      isVerified: isKycVerified,
+      kycDocType,
+      kycDocNumber: kycDocNumber.trim(),
       savedAddresses: [updatedAddress]
     });
   };
@@ -546,6 +563,111 @@ export const MyProfilePage: React.FC = () => {
                 placeholder="560103"
                 className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 border border-neutral-300 rounded-xl outline-none focus:border-emerald-500 font-mono"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Bank Account Direct Settlement (Alternative to UPI) */}
+        <div className="space-y-4 pt-2">
+          <h3 className="font-bold text-sm text-neutral-900 uppercase tracking-wider border-b border-neutral-100 pb-2 flex items-center justify-between">
+            <span>Direct Bank NEFT / IMPS Settlement (Optional)</span>
+            <span className="text-[10px] font-bold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
+              High Value Escrow Payouts
+            </span>
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">Bank Name</label>
+              <input
+                type="text"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                placeholder="e.g. HDFC Bank, SBI"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 border border-neutral-300 rounded-xl outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">Account Number</label>
+              <input
+                type="password"
+                value={bankAccountNumber}
+                onChange={(e) => setBankAccountNumber(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono bg-neutral-50 border border-neutral-300 rounded-xl outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-700 mb-1">IFSC Code (11 Chars)</label>
+              <input
+                type="text"
+                maxLength={11}
+                value={bankIfsc}
+                onChange={(e) => setBankIfsc(e.target.value.toUpperCase())}
+                placeholder="HDFC0001234"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold bg-neutral-50 border border-neutral-300 rounded-xl outline-none focus:border-emerald-500 uppercase"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* KYC & Identity Trust Verification */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+            <div>
+              <h3 className="font-bold text-sm text-neutral-900 uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Identity &amp; KYC Trust Verification</span>
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Verified community sellers get a green badge and enjoy 3x faster escrow payouts.
+              </p>
+            </div>
+            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${isKycVerified ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-100 text-neutral-600'}`}>
+              {isKycVerified ? 'Verified Partner ✓' : 'Self-Declaration'}
+            </span>
+          </div>
+
+          <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200 space-y-3">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="kyc-checkbox"
+                checked={isKycVerified}
+                onChange={(e) => setIsKycVerified(e.target.checked)}
+                className="mt-1 w-4 h-4 text-emerald-600 rounded border-neutral-300 focus:ring-emerald-500"
+              />
+              <label htmlFor="kyc-checkbox" className="text-xs text-neutral-700 cursor-pointer select-none">
+                <strong className="text-neutral-900 block">I confirm that I am a verified resident trader in India</strong>
+                <span>
+                  I declare that my listings are lightweight (&lt;5kg) genuine household essentials and I agree to EasyMart&apos;s Escrow rules and consumer protection guidelines.
+                </span>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-600 mb-1">Government ID Type</label>
+                <select
+                  value={kycDocType}
+                  onChange={(e) => setKycDocType(e.target.value as any)}
+                  className="w-full px-3 py-2 text-xs bg-white border border-neutral-300 rounded-xl"
+                >
+                  <option value="PAN">Income Tax PAN Card</option>
+                  <option value="Aadhaar">Indian Aadhaar Number</option>
+                  <option value="Voter ID">Election Voter ID</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-600 mb-1">Document Ref (Last 4 digits or Number)</label>
+                <input
+                  type="text"
+                  value={kycDocNumber}
+                  onChange={(e) => setKycDocNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. ABCDE1234F or •••• 5678"
+                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-neutral-300 rounded-xl"
+                />
+              </div>
             </div>
           </div>
         </div>

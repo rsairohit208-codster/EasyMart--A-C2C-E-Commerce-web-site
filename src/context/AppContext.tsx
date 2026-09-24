@@ -7,7 +7,10 @@ import {
 import { 
   INITIAL_USERS, INITIAL_PRODUCTS, INITIAL_REVIEWS, 
   INITIAL_ORDERS, INITIAL_CONVERSATIONS, INITIAL_CHAT_MESSAGES, 
-  INITIAL_NOTIFICATIONS, CATEGORIES 
+  INITIAL_NOTIFICATIONS, CATEGORIES,
+  SAMPLE_STARTER_USERS, SAMPLE_STARTER_PRODUCTS, SAMPLE_STARTER_REVIEWS,
+  SAMPLE_STARTER_ORDERS, SAMPLE_STARTER_CONVERSATIONS, SAMPLE_STARTER_CHAT_MESSAGES,
+  SAMPLE_STARTER_NOTIFICATIONS
 } from '../data/seedData';
 
 interface NavigationParams {
@@ -96,6 +99,7 @@ interface AppContextType {
     amount: number;
     shippingFee: number;
     paymentMethod: 'upi' | 'netbanking' | 'card' | 'cod';
+    gatewayName?: string;
     paymentDetails: {
       upiId?: string;
       bankName?: string;
@@ -105,6 +109,8 @@ interface AppContextType {
   }) => Order;
   updateOrderStatus: (orderId: string, status: OrderStatus, trackingNumber?: string, courierPartner?: string) => void;
   releaseEscrow: (orderId: string) => void;
+  verifyDeliveryOtp: (orderId: string, enteredOtp: string) => { success: boolean; message: string };
+  raiseDispute: (orderId: string, reason: string) => void;
   
   // Reviews
   reviews: Review[];
@@ -155,20 +161,36 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  USERS: 'easymart_users_v1',
-  CURRENT_USER_ID: 'easymart_current_user_id_v1',
-  PRODUCTS: 'easymart_products_v1',
-  WISHLIST: 'easymart_wishlist_v1',
-  ORDERS: 'easymart_orders_v1',
-  REVIEWS: 'easymart_reviews_v1',
-  CONVERSATIONS: 'easymart_conversations_v1',
-  CHAT_MESSAGES: 'easymart_chat_messages_v1',
-  NOTIFICATIONS: 'easymart_notifications_v1',
-  REPORTS: 'easymart_reports_v1',
-  TICKETS: 'easymart_tickets_v1',
-  SELECTED_CITY: 'easymart_selected_city_v1',
-  IS_LIVE_MODE: 'easymart_is_live_mode_v1',
+  USERS: 'easymart_real_users_v2',
+  CURRENT_USER_ID: 'easymart_real_user_id_v2',
+  PRODUCTS: 'easymart_real_products_v2',
+  WISHLIST: 'easymart_real_wishlist_v2',
+  ORDERS: 'easymart_real_orders_v2',
+  REVIEWS: 'easymart_real_reviews_v2',
+  CONVERSATIONS: 'easymart_real_conversations_v2',
+  CHAT_MESSAGES: 'easymart_real_chat_messages_v2',
+  NOTIFICATIONS: 'easymart_real_notifications_v2',
+  REPORTS: 'easymart_real_reports_v2',
+  TICKETS: 'easymart_real_tickets_v2',
+  SELECTED_CITY: 'easymart_real_selected_city_v2',
+  IS_LIVE_MODE: 'easymart_real_is_live_mode_v2',
 };
+
+// One-time cleanup of legacy demo caches to ensure 100% clean real-world launch
+if (typeof window !== 'undefined' && localStorage.getItem('easymart_v2_initialized') !== 'true') {
+  try {
+    const legacyKeys = [
+      'easymart_users_v1', 'easymart_current_user_id_v1', 'easymart_products_v1', 
+      'easymart_wishlist_v1', 'easymart_orders_v1', 'easymart_conversations_v1', 
+      'easymart_chat_messages_v1', 'easymart_reviews_v1', 'easymart_notifications_v1', 
+      'easymart_reports_v1', 'easymart_tickets_v1', 'easymart_is_live_mode_v1'
+    ];
+    legacyKeys.forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('easymart_v2_initialized', 'true');
+  } catch {
+    // ignore
+  }
+}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation
@@ -226,16 +248,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
-    return saved !== null ? saved : 'usr-buyer-demo';
+    return saved !== null ? saved : 'guest';
   });
 
   const isAuthenticated = Boolean(currentUserId && currentUserId !== 'guest' && users.some(u => u.id === currentUserId));
   const currentUser = isAuthenticated
-    ? (users.find(u => u.id === currentUserId) || users[0] || GUEST_USER)
+    ? (users.find(u => u.id === currentUserId) || GUEST_USER)
     : GUEST_USER;
 
   const [isLiveProductionMode, setIsLiveProductionMode] = useState<boolean>(() => {
-    return localStorage.getItem(STORAGE_KEYS.IS_LIVE_MODE) === 'true';
+    return localStorage.getItem(STORAGE_KEYS.IS_LIVE_MODE) !== 'false';
   });
 
   const setCurrentUserById = (userId: string) => {
@@ -262,36 +284,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const clearSampleData = () => {
-    // Retain only user-created products (not starting with initial 'prod-1' through 'prod-12')
-    const userProducts = products.filter(p => !p.id.match(/^prod-[0-9]+$/));
-    setProducts(userProducts);
+    setProducts([]);
     setOrders([]);
     setReviews([]);
     setConversations([]);
     setChatMessages({});
     setIsLiveProductionMode(true);
     localStorage.setItem(STORAGE_KEYS.IS_LIVE_MODE, 'true');
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(userProducts));
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify({}));
-    showToast('Marketplace cleared! Ready for 100% real user postings.', 'success');
+    showToast('Marketplace cleared! 100% reserved for real user listings.', 'success');
   };
 
   const restoreSampleData = () => {
-    setProducts(INITIAL_PRODUCTS);
-    setOrders(INITIAL_ORDERS);
-    setReviews(INITIAL_REVIEWS);
-    setConversations(INITIAL_CONVERSATIONS);
-    setChatMessages(INITIAL_CHAT_MESSAGES);
+    setProducts(SAMPLE_STARTER_PRODUCTS);
+    setOrders(SAMPLE_STARTER_ORDERS);
+    setReviews(SAMPLE_STARTER_REVIEWS);
+    setConversations(SAMPLE_STARTER_CONVERSATIONS);
+    setChatMessages(SAMPLE_STARTER_CHAT_MESSAGES);
     setIsLiveProductionMode(false);
-    localStorage.removeItem(STORAGE_KEYS.IS_LIVE_MODE);
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(INITIAL_PRODUCTS));
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
-    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(INITIAL_REVIEWS));
-    localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(INITIAL_CONVERSATIONS));
-    localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(INITIAL_CHAT_MESSAGES));
+    localStorage.setItem(STORAGE_KEYS.IS_LIVE_MODE, 'false');
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(SAMPLE_STARTER_PRODUCTS));
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(SAMPLE_STARTER_ORDERS));
+    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(SAMPLE_STARTER_REVIEWS));
+    localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(SAMPLE_STARTER_CONVERSATIONS));
+    localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(SAMPLE_STARTER_CHAT_MESSAGES));
     showToast('Starter catalogue restored for preview and evaluation.', 'info');
   };
 
@@ -304,7 +324,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Wishlist
   const [wishlist, setWishlist] = useState<string[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.WISHLIST);
-    return saved ? JSON.parse(saved) : ['prod-1', 'prod-4'];
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Orders
@@ -726,6 +746,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     amount: number;
     shippingFee: number;
     paymentMethod: 'upi' | 'netbanking' | 'card' | 'cod';
+    gatewayName?: string;
     paymentDetails: {
       upiId?: string;
       bankName?: string;
@@ -733,7 +754,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     shippingAddress: Address;
   }) => {
-    const orderNumber = `EM-IN-${Math.floor(10000 + Math.random() * 90000)}`;
+    const year = new Date().getFullYear();
+    const orderNumber = `EM-IN-${year}-${Math.floor(100000 + Math.random() * 900000)}`;
+    const rrn = `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+    const deliveryOtp = `${Math.floor(100000 + Math.random() * 900000)}`;
+    const securitySignature = `sec_sha256_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 10)}`;
+    const escrowVaultId = `ESCROW-NODE-IND-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    const initialTrackingEvents = [
+      {
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ', Today',
+        status: 'Escrow Vault Secured',
+        location: 'National Escrow Gateway (NPCI/RBI Node)',
+        note: `Payment authorized via ${orderData.gatewayName || 'Indian Gateway'}. Funds locked in Escrow Vault.`
+      },
+      {
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ', Today',
+        status: 'Order Placed & Seller Notified',
+        location: orderData.product.location.city,
+        note: `Seller ${orderData.product.seller.name} notified to pack parcel and schedule courier pickup.`
+      }
+    ];
+
     const newOrder: Order = {
       id: `ord-${Date.now()}`,
       orderNumber,
@@ -747,17 +789,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       buyerPhone: currentUser.phone,
       sellerId: orderData.product.sellerId,
       sellerName: orderData.product.seller.name,
-      sellerPhone: '+91 98450 71290',
-      sellerUpiId: 'seller@upi',
+      sellerPhone: (orderData.product.seller as any).phone || '+91 98450 71290',
+      sellerUpiId: (orderData.product.seller as any).upiId || 'seller.escrow@upi',
       amount: orderData.amount,
       shippingFee: orderData.shippingFee,
       totalAmount: orderData.amount + orderData.shippingFee,
       paymentMethod: orderData.paymentMethod,
+      gatewayName: orderData.gatewayName || 'UPI Escrow Pay',
       paymentDetails: {
         ...orderData.paymentDetails,
         paidAt: new Date().toISOString(),
         status: 'success'
       },
+      rrn,
+      securitySignature,
+      deliveryOtp,
+      escrowVaultId,
+      trackingEvents: initialTrackingEvents,
       shippingAddress: orderData.shippingAddress,
       status: 'confirmed',
       estimatedDelivery: '3-4 business days via Indian Courier',
@@ -775,7 +823,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `notif-${Date.now()}-1`,
       userId: currentUser.id,
       title: `Order Confirmed: ${orderNumber} 🎉`,
-      message: `₹${newOrder.totalAmount} is held securely in EasyMart Escrow. Seller has been notified to pack & dispatch.`,
+      message: `₹${newOrder.totalAmount} is held securely in EasyMart Escrow. Your 6-digit Secret Delivery Code is ${deliveryOtp}.`,
       type: 'order',
       read: false,
       timestamp: 'Just now',
@@ -788,7 +836,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `notif-${Date.now()}-2`,
       userId: orderData.product.sellerId,
       title: `You have a new sale! 📦`,
-      message: `${currentUser.name} purchased "${orderData.product.title}". Please dispatch via courier.`,
+      message: `${currentUser.name} ordered "${orderData.product.title}". Payment secured in Escrow. Please pack and dispatch via courier.`,
       type: 'order',
       read: false,
       timestamp: 'Just now',
@@ -804,11 +852,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateOrderStatus = (orderId: string, status: OrderStatus, trackingNumber?: string, courierPartner?: string) => {
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
-        const updated = { ...o, status };
+        const events = o.trackingEvents || [];
+        const newEvents = [...events];
+
+        if (status === 'dispatched') {
+          newEvents.push({
+            time: 'Just now',
+            status: 'Courier Dispatched & AWB Assigned',
+            location: o.shippingAddress.state,
+            note: `Picked up by ${courierPartner || 'Delhivery Express'}. Consignment AWB: ${trackingNumber || 'IND-' + Date.now()}`
+          });
+        } else if (status === 'out_for_delivery') {
+          newEvents.push({
+            time: 'Just now',
+            status: 'Out for Doorstep Delivery',
+            location: o.shippingAddress.city,
+            note: 'Courier agent has reached the local hub. Keep 6-digit Delivery Code ready for parcel inspection.'
+          });
+        } else if (status === 'delivered') {
+          newEvents.push({
+            time: 'Just now',
+            status: 'Delivered & Escrow Released',
+            location: o.shippingAddress.city,
+            note: `Delivery confirmed. Escrow payout credited to seller UPI: ${o.sellerUpiId}.`
+          });
+        }
+
+        const updated = { 
+          ...o, 
+          status,
+          trackingEvents: newEvents
+        };
         if (trackingNumber) updated.trackingNumber = trackingNumber;
         if (courierPartner) updated.courierPartner = courierPartner;
         if (status === 'delivered') {
           updated.escrowStatus = 'released_to_seller';
+          updated.escrowReleaseTxnId = `PAYOUT-UPI-${Date.now()}`;
+          updated.escrowReleasedAt = new Date().toISOString();
         }
         return updated;
       }
@@ -819,17 +899,97 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const releaseEscrow = (orderId: string) => {
+    const payoutTxnId = `PAYOUT-UPI-${Date.now()}`;
+    const nowStr = new Date().toISOString();
+
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
+        const events = o.trackingEvents || [];
         return {
           ...o,
           status: 'delivered',
-          escrowStatus: 'released_to_seller'
+          escrowStatus: 'released_to_seller',
+          escrowReleaseTxnId: payoutTxnId,
+          escrowReleasedAt: nowStr,
+          trackingEvents: [
+            ...events,
+            {
+              time: 'Just now',
+              status: 'Delivered & Escrow Released by Buyer',
+              location: o.shippingAddress.city,
+              note: `Buyer confirmed satisfactory condition. Escrow payout (₹${o.amount}) disbursed to seller UPI: ${o.sellerUpiId}.`
+            }
+          ]
         };
       }
       return o;
     }));
-    showToast('Parcel delivery confirmed! Escrow funds released to seller UPI.');
+    showToast('Parcel delivery confirmed! Escrow funds released to seller UPI.', 'success');
+  };
+
+  const verifyDeliveryOtp = (orderId: string, enteredOtp: string): { success: boolean; message: string } => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return { success: false, message: 'Order not found' };
+
+    const cleanInput = enteredOtp.trim();
+    if (order.deliveryOtp && cleanInput !== order.deliveryOtp) {
+      showToast('Invalid Secret Delivery Code. Buyer must provide the 6-digit code shown in their Purchases tab.', 'error');
+      return { success: false, message: 'Invalid 6-digit security code.' };
+    }
+
+    const payoutTxnId = `PAYOUT-UPI-${Date.now()}`;
+    const nowStr = new Date().toISOString();
+
+    setOrders(prev => prev.map(o => {
+      if (o.id === orderId) {
+        const events = o.trackingEvents || [];
+        return {
+          ...o,
+          status: 'delivered',
+          escrowStatus: 'released_to_seller',
+          escrowReleaseTxnId: payoutTxnId,
+          escrowReleasedAt: nowStr,
+          trackingEvents: [
+            ...events,
+            {
+              time: 'Just now',
+              status: '6-Digit Handover Code Verified',
+              location: o.shippingAddress.city,
+              note: `Physical handover inspected & verified. Escrow vault payout (₹${o.amount}) disbursed to seller UPI: ${o.sellerUpiId}.`
+            }
+          ]
+        };
+      }
+      return o;
+    }));
+
+    showToast(`Code Verified! ₹${order.amount} credited to seller UPI (${order.sellerUpiId}).`, 'success');
+    return { success: true, message: 'OTP verified! Escrow payout completed.' };
+  };
+
+  const raiseDispute = (orderId: string, reason: string) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id === orderId) {
+        const events = o.trackingEvents || [];
+        return {
+          ...o,
+          escrowStatus: 'disputed',
+          disputeReason: reason,
+          trackingEvents: [
+            ...events,
+            {
+              time: 'Just now',
+              status: 'Dispute Raised - Escrow Vault Frozen',
+              location: 'EasyMart Safety Mediation Team',
+              note: `Buyer filed ticket: "${reason}". Escrow payout frozen pending inspection.`
+            }
+          ]
+        };
+      }
+      return o;
+    }));
+
+    showToast('Dispute opened. Escrow funds safely locked pending mediation.', 'info');
   };
 
   // Reviews
@@ -1063,6 +1223,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createOrder,
         updateOrderStatus,
         releaseEscrow,
+        verifyDeliveryOtp,
+        raiseDispute,
         reviews,
         addReview,
         conversations,

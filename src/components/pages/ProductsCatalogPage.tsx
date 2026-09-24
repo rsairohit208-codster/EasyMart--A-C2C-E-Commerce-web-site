@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Filter, SlidersHorizontal, Search, X, Check, MapPin, 
-  ArrowUpDown, ShieldCheck, Sparkles, Tag 
+  ArrowUpDown, ShieldCheck, Sparkles, Tag, Package 
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './HomePage';
@@ -374,12 +374,38 @@ export const ProductsCatalogPage: React.FC = () => {
           )}
 
           {/* Grid or Empty State */}
-          {filteredProducts.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-neutral-200 p-12 text-center space-y-4">
+          {products.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-neutral-200/90 p-10 sm:p-14 text-center space-y-4 shadow-xs">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto border border-emerald-100 shadow-2xs">
+                <Package className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  Reserved for Real-World Community Postings
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-900 font-display pt-1">
+                  Catalog Open for Real-World Sellers!
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto leading-relaxed">
+                  All demo products have been cleared. Have gently used textbooks, kitchenware, audio gear, or clothing? List them in 60 seconds with 100% Escrow Protection.
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={() => requireAuth('post a free ad', () => navigateTo('post-item'))}
+                  className="px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/20 transition inline-flex items-center gap-2"
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Post the First Ad in your City</span>
+                </button>
+              </div>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-neutral-200 p-12 text-center space-y-4">
               <div className="w-16 h-16 bg-neutral-100 text-neutral-400 rounded-full flex items-center justify-center mx-auto">
                 <Search className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900">No everyday essentials match your filters</h3>
+              <h3 className="text-lg font-bold text-neutral-900 font-display">No everyday essentials match your filters</h3>
               <p className="text-xs text-neutral-500 max-w-md mx-auto">
                 Try expanding your price range, searching for another keyword, or resetting filters to explore all community listings across India.
               </p>

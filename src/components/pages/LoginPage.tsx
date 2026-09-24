@@ -263,61 +263,8 @@ export const LoginPage: React.FC = () => {
         </div>
       )}
 
-      {/* Discreet Evaluator Demo Accounts Access */}
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-          className="w-full text-center text-xs text-neutral-400 hover:text-neutral-600 flex items-center justify-center gap-1 transition"
-        >
-          <span>Need pre-seeded test profiles?</span>
-          <span className="font-semibold text-emerald-700">Click to view demo credentials</span>
-          {showDemoAccounts ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        </button>
-
-        {showDemoAccounts && (
-          <div className="mt-3 p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200 text-xs space-y-2">
-            <span className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider block">
-              1-Click Test Personas (Evaluator Review):
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrentUserById('usr-seller-priya');
-                  navigateTo('home');
-                }}
-                className="p-2 bg-white rounded-xl border border-neutral-200 font-bold text-[11px] text-neutral-800 hover:border-emerald-400 hover:bg-emerald-50 transition"
-              >
-                Priya (Seller)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrentUserById('usr-buyer-demo');
-                  navigateTo('home');
-                }}
-                className="p-2 bg-white rounded-xl border border-neutral-200 font-bold text-[11px] text-neutral-800 hover:border-emerald-400 hover:bg-emerald-50 transition"
-              >
-                Aarav (Buyer)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrentUserById('usr-admin-rajesh');
-                  navigateTo('admin');
-                }}
-                className="p-2 bg-white rounded-xl border border-neutral-200 font-bold text-[11px] text-neutral-800 hover:border-emerald-400 hover:bg-emerald-50 transition"
-              >
-                Rajesh (Admin)
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Safety footer */}
-      <div className="text-center text-[11px] text-neutral-400 flex items-center justify-center gap-1.5">
+      <div className="text-center text-[11px] text-neutral-400 flex items-center justify-center gap-1.5 pt-2">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
         <span>Secured with 256-bit encryption &amp; Indian NPCI Escrow protocols</span>
       </div>

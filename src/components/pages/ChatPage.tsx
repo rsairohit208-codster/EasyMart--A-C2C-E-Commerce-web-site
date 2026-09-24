@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Send, MessageSquare, ShieldCheck, Tag, 
-  Check, X, ArrowRight, UserCheck, Package, ExternalLink 
+  Check, X, ArrowRight, UserCheck, Package, ExternalLink, Lock 
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -78,18 +78,47 @@ export const ChatPage: React.FC = () => {
 
   if (!activeConv) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
-        <MessageSquare className="w-12 h-12 text-neutral-300 mx-auto" />
-        <h2 className="text-xl font-bold text-neutral-800">No active conversations</h2>
-        <p className="text-xs text-neutral-500">
-          Find any everyday item on the catalog and click &quot;Chat with Seller&quot; to start bargaining.
-        </p>
-        <button
-          onClick={() => navigateTo('products')}
-          className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs"
-        >
-          Explore Catalog
-        </button>
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-16 h-16 bg-emerald-50 text-emerald-700 rounded-3xl flex items-center justify-center mx-auto border border-emerald-100 shadow-xs">
+          <MessageSquare className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+            <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            <span>End-to-End Escrow Protected Messaging</span>
+          </div>
+          <h2 className="text-2xl font-extrabold text-neutral-900 font-display">
+            No Active Conversations Yet
+          </h2>
+          <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
+            This chat space is strictly reserved for real buyers and sellers to communicate, negotiate prices, and schedule safe deliveries across India.
+          </p>
+        </div>
+
+        <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200 text-left text-xs space-y-2 max-w-md mx-auto">
+          <span className="font-bold text-neutral-800 block text-[11px] uppercase tracking-wider">How Peer Chat Works:</span>
+          <p className="text-neutral-600 leading-relaxed text-[11px]">
+            1. Browse any everyday essential listing on the marketplace.<br />
+            2. Tap <strong>&quot;Chat with Seller&quot;</strong> or <strong>&quot;Make an Offer&quot;</strong>.<br />
+            3. Negotiate directly with the neighbor seller, agree on price, and checkout via 100% Escrow Protection.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => navigateTo('products')}
+            className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2"
+          >
+            <span>Explore Active Listings</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => navigateTo('post-item')}
+            className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-neutral-50 text-neutral-800 font-bold text-xs rounded-xl border border-neutral-300 transition"
+          >
+            Post an Item to Sell
+          </button>
+        </div>
       </div>
     );
   }
