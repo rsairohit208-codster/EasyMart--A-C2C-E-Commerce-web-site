@@ -119,6 +119,7 @@ export const INITIAL_USERS: User[] = [
     memberSince: 'Mar 2024',
     bio: 'Software engineer living in Koramangala, Bengaluru. Love reading non-fiction and tech books, and trading gently used home goods.',
     upiId: 'aarav.sharma@okaxis',
+    password: 'password123',
     role: 'buyer',
     savedAddresses: [
       {
@@ -162,6 +163,7 @@ export const INITIAL_USERS: User[] = [
     memberSince: 'Jan 2023',
     bio: 'Interior enthusiast & verified EasyMart Super Seller. All items are strictly authentic, neatly packaged, and dispatched within 24 hours.',
     upiId: 'priya.iyer@oksbi',
+    password: 'password123',
     role: 'seller',
     savedAddresses: [
       {
@@ -191,6 +193,7 @@ export const INITIAL_USERS: User[] = [
     memberSince: 'Jun 2023',
     bio: 'Avid bookworm & tech enthusiast. De-cluttering books, wireless accessories, and home items at fair prices.',
     upiId: 'vikram.malhotra@okhdfcbank',
+    password: 'password123',
     role: 'seller',
     savedAddresses: [
       {
@@ -220,6 +223,7 @@ export const INITIAL_USERS: User[] = [
     memberSince: 'Aug 2022',
     bio: 'EasyMart Community Trust & Safety Team Lead. Ensuring safe peer-to-peer transactions across India.',
     upiId: 'easymart.escrow@icici',
+    password: 'admin123',
     role: 'admin',
     savedAddresses: []
   }

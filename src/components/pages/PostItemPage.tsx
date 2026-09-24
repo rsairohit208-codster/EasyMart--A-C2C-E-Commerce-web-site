@@ -8,7 +8,7 @@ import { INDIAN_STATES, MAJOR_INDIAN_CITIES } from '../../data/seedData';
 import { ProductCondition } from '../../types';
 
 export const PostItemPage: React.FC = () => {
-  const { categories, currentUser, addProduct, navigateTo, showToast } = useApp();
+  const { categories, currentUser, isAuthenticated, addProduct, navigateTo, showToast } = useApp();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -118,6 +118,36 @@ export const PostItemPage: React.FC = () => {
 
     navigateTo('product-details', { productId: newId });
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-3xl flex items-center justify-center mx-auto shadow-xs">
+          <Package className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-neutral-900 font-display">Sign In to Post an Ad</h2>
+          <p className="text-xs text-neutral-500 max-w-sm mx-auto leading-relaxed">
+            To ensure genuine listings, trust, and secure escrow UPI payouts across India, you need an active EasyMart account to sell everyday items.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => navigateTo('login')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition"
+          >
+            Sign In Now
+          </button>
+          <button
+            onClick={() => navigateTo('register')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs transition"
+          >
+            Register Free Account
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">

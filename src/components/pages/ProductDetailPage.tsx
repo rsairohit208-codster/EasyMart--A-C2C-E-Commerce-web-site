@@ -13,6 +13,7 @@ export const ProductDetailPage: React.FC = () => {
     navParams, products, navigateTo, isWishlisted, 
     toggleWishlist, openPaymentModal, openReportModal, 
     startConversation, reviews, addReview, currentUser,
+    isAuthenticated, requireAuth,
     incrementProductViews, showToast 
   } = useApp();
 
@@ -255,7 +256,7 @@ export const ProductDetailPage: React.FC = () => {
               <button
                 id="product-buy-now-btn"
                 disabled={product.status !== 'active'}
-                onClick={() => openPaymentModal(product)}
+                onClick={() => requireAuth('buy with escrow protection', () => openPaymentModal(product))}
                 className="flex-1 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-0.5"
               >
                 <Lock className="w-4 h-4" />
@@ -264,7 +265,7 @@ export const ProductDetailPage: React.FC = () => {
 
               <button
                 id="product-wishlist-toggle-btn"
-                onClick={() => toggleWishlist(product.id)}
+                onClick={() => requireAuth('save this product to your wishlist', () => toggleWishlist(product.id))}
                 className={`p-3.5 rounded-xl border transition flex items-center justify-center gap-2 text-sm font-bold ${isFavorited ? 'border-rose-200 bg-rose-50 text-rose-600' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-700'}`}
               >
                 <Heart className={`w-5 h-5 ${isFavorited ? 'fill-rose-500 text-rose-500' : ''}`} />
@@ -276,7 +277,7 @@ export const ProductDetailPage: React.FC = () => {
               {product.negotiable && (
                 <button
                   id="make-offer-btn"
-                  onClick={() => setIsOfferModalOpen(true)}
+                  onClick={() => requireAuth('send a bargain price offer', () => setIsOfferModalOpen(true))}
                   className="flex-1 py-2.5 px-4 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
                 >
                   <Tag className="w-3.5 h-3.5 text-amber-600" />
@@ -286,7 +287,7 @@ export const ProductDetailPage: React.FC = () => {
 
               <button
                 id="chat-seller-btn"
-                onClick={() => startConversation(product.id)}
+                onClick={() => requireAuth('chat with the seller', () => startConversation(product.id))}
                 className="flex-1 py-2.5 px-4 bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-2xs"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />

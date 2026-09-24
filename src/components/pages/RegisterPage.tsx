@@ -66,7 +66,8 @@ export const RegisterPage: React.FC = () => {
       city,
       state,
       role
-    });
+    }, password);
+    navigateTo('home');
   };
 
   return (

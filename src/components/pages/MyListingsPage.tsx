@@ -6,8 +6,38 @@ import {
 import { useApp } from '../../context/AppContext';
 
 export const MyListingsPage: React.FC = () => {
-  const { currentUser, products, deleteProduct, markProductSold, navigateTo } = useApp();
+  const { currentUser, isAuthenticated, products, deleteProduct, markProductSold, navigateTo } = useApp();
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'reserved'>('all');
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-3xl flex items-center justify-center mx-auto shadow-xs">
+          <Package className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-neutral-900 font-display">Sign In to View Listings</h2>
+          <p className="text-xs text-neutral-500 max-w-sm mx-auto leading-relaxed">
+            Manage your ads, edit prices, view analytics, and mark products as sold.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => navigateTo('login')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition"
+          >
+            Sign In Now
+          </button>
+          <button
+            onClick={() => navigateTo('register')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs transition"
+          >
+            Register Free Account
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const myListings = products.filter(p => p.sellerId === currentUser.id);
 

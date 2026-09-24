@@ -6,7 +6,37 @@ import {
 import { useApp } from '../../context/AppContext';
 
 export const SalesPage: React.FC = () => {
-  const { currentUser, orders, updateOrderStatus, startConversation, showToast } = useApp();
+  const { currentUser, isAuthenticated, navigateTo, orders, updateOrderStatus, startConversation, showToast } = useApp();
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-3xl flex items-center justify-center mx-auto shadow-xs">
+          <DollarSign className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-neutral-900 font-display">Sign In to View Sales &amp; Payouts</h2>
+          <p className="text-xs text-neutral-500 max-w-sm mx-auto leading-relaxed">
+            Manage dispatch orders, submit courier tracking details, and receive verified escrow payouts to your UPI.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => navigateTo('login')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition"
+          >
+            Sign In Now
+          </button>
+          <button
+            onClick={() => navigateTo('register')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs transition"
+          >
+            Register Free Account
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Seller orders
   const mySales = orders.filter(o => o.sellerId === currentUser.id);

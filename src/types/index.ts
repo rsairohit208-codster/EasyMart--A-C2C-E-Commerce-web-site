@@ -35,6 +35,7 @@ export interface Address {
 export interface User extends UserSummary {
   email: string;
   phone: string;
+  password?: string;
   bio: string;
   upiId: string;
   bankAccount?: {

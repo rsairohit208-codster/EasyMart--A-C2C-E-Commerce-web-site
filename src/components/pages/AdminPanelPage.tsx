@@ -10,7 +10,7 @@ export const AdminPanelPage: React.FC = () => {
   const { 
     currentUser, products, users, orders, reports, 
     resolveReport, deleteProduct, releaseEscrow, showToast,
-    updateProduct 
+    updateProduct, isLiveProductionMode, clearSampleData, restoreSampleData
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'escrow' | 'listings' | 'users'>('overview');
@@ -124,47 +124,86 @@ export const AdminPanelPage: React.FC = () => {
 
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Policy Compliance Audit */}
-          <div className="bg-white rounded-3xl border border-neutral-200/90 p-6 space-y-4 shadow-xs">
-            <h3 className="font-bold text-sm text-neutral-900 font-display flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              Automated Anti-Heavy Machinery Audit
-            </h3>
-            <p className="text-xs text-neutral-600 leading-relaxed">
-              Our automated content ingestion filter scans all incoming ads to enforce our strict prohibition on automotive vehicles, industrial machinery, and tools exceeding 5kg.
-            </p>
-            <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 space-y-1">
-              <span className="font-bold block">Status: Clean &amp; Compliant</span>
-              <span>0 active heavy machinery or tractor listings detected. All current active listings adhere to the everyday essentials category.</span>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Policy Compliance Audit */}
+            <div className="bg-white rounded-3xl border border-neutral-200/90 p-6 space-y-4 shadow-xs">
+              <h3 className="font-bold text-sm text-neutral-900 font-display flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                Automated Anti-Heavy Machinery Audit
+              </h3>
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                Our automated content ingestion filter scans all incoming ads to enforce our strict prohibition on automotive vehicles, industrial machinery, and tools exceeding 5kg.
+              </p>
+              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 space-y-1">
+                <span className="font-bold block">Status: Clean &amp; Compliant</span>
+                <span>0 active heavy machinery or tractor listings detected. All current active listings adhere to the everyday essentials category.</span>
+              </div>
             </div>
+
+            {/* Escrow Quick Actions */}
+            <div className="bg-white rounded-3xl border border-neutral-200/90 p-6 space-y-4 shadow-xs">
+              <h3 className="font-bold text-sm text-neutral-900 font-display">
+                Escrow Operations Quick Summary
+              </h3>
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                {orders.length} total C2C transactions recorded on the platform with 100% trace records for tax compliance.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setActiveTab('escrow')}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition"
+                >
+                  Inspect Escrow Orders
+                </button>
+                <button
+                  onClick={() => setActiveTab('reports')}
+                  className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs rounded-xl transition"
+                >
+                  Review Reports ({pendingReports.length})
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-3xl border border-neutral-200/90 p-6 space-y-4 shadow-xs">
-            <h3 className="font-bold text-sm text-neutral-900 font-display">
-              Escrow Operations Quick Summary
-            </h3>
-            <p className="text-xs text-neutral-600 leading-relaxed">
-              {orders.length} total C2C transactions recorded on the platform with 100% trace records for tax compliance.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setActiveTab('escrow')}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition"
-              >
-                Inspect Escrow Orders
-              </button>
-              <button
-                onClick={() => setActiveTab('reports')}
-                className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs rounded-xl transition"
-              >
-                Review Reports ({pendingReports.length})
-              </button>
+          {/* 100% Real-World Live Marketplace Controls */}
+          <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-3xl p-6 shadow-md space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500 text-neutral-950">
+                    {isLiveProductionMode ? '100% Real Live Mode Active' : 'Catalogue Active'}
+                  </span>
+                  <span className="text-xs text-neutral-400">EasyMart India v2.0</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold mt-1 text-white">
+                  Real-World Marketplace Launch &amp; Data Controls
+                </h3>
+                <p className="text-xs text-neutral-300 max-w-2xl mt-0.5">
+                  Prepare this instance for 100% real-world deployment on Netlify. You can clear starter example products to start with a clean slate for real Indian users, or restore the starter catalogue whenever testing.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  onClick={clearSampleData}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition shadow-sm flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear Sample Postings</span>
+                </button>
+                <button
+                  onClick={restoreSampleData}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-neutral-700 hover:bg-neutral-600 text-neutral-200 transition flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Restore Starter Items</span>
+                </button>
+              </div>
             </div>
           </div>
-
         </div>
       )}
 

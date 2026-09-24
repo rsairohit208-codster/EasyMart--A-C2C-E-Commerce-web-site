@@ -9,7 +9,8 @@ import { Product } from '../../types';
 export const HomePage: React.FC = () => {
   const { 
     products, categories, navigateTo, isWishlisted, 
-    toggleWishlist, openPaymentModal, setSelectedCity 
+    toggleWishlist, openPaymentModal, setSelectedCity,
+    requireAuth
   } = useApp();
 
   const featuredProducts = products.filter(p => p.status === 'active').slice(0, 8);
@@ -61,7 +62,7 @@ export const HomePage: React.FC = () => {
 
               <button
                 id="hero-sell-btn"
-                onClick={() => navigateTo('post-item')}
+                onClick={() => requireAuth('post a free ad', () => navigateTo('post-item'))}
                 className="w-full sm:w-auto px-7 py-3 bg-white hover:bg-neutral-50 text-neutral-800 font-bold text-sm rounded-xl border border-neutral-300 shadow-xs transition flex items-center justify-center gap-2 hover:-translate-y-0.5"
               >
                 <Package className="w-4 h-4 text-emerald-600" />
@@ -169,11 +170,11 @@ export const HomePage: React.FC = () => {
               key={product.id} 
               product={product} 
               isWishlisted={isWishlisted(product.id)}
-              onToggleWishlist={() => toggleWishlist(product.id)}
+              onToggleWishlist={() => requireAuth('save this product to your wishlist', () => toggleWishlist(product.id))}
               onClick={() => navigateTo('product-details', { productId: product.id })}
               onQuickBuy={(e) => {
                 e.stopPropagation();
-                openPaymentModal(product);
+                requireAuth('buy this product with escrow', () => openPaymentModal(product));
               }}
             />
           ))}

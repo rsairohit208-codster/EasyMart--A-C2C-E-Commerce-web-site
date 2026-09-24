@@ -13,7 +13,7 @@ export const PaymentModal: React.FC = () => {
 
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'netbanking' | 'card' | 'cod'>('upi');
   const [upiOption, setUpiOption] = useState<'qr' | 'id'>('qr');
-  const [upiIdInput, setUpiIdInput] = useState(currentUser.upiId || 'aarav.sharma@okaxis');
+  const [upiIdInput, setUpiIdInput] = useState(currentUser.upiId || `${currentUser.name.toLowerCase().replace(/[^a-z0-9]/g, '') || 'pay'}@okhdfcbank`);
   const [selectedBank, setSelectedBank] = useState('State Bank of India (SBI)');
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');

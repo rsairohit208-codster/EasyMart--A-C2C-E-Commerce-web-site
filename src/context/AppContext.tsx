@@ -24,6 +24,24 @@ interface ToastInfo {
   message: string;
 }
 
+export const GUEST_USER: User = {
+  id: 'guest',
+  name: 'Guest Visitor',
+  email: '',
+  phone: '',
+  avatar: '',
+  city: 'All India',
+  state: '',
+  rating: 5.0,
+  reviewCount: 0,
+  isVerified: false,
+  memberSince: 'Today',
+  bio: 'Exploring verified everyday essentials on EasyMart India.',
+  upiId: '',
+  role: 'buyer',
+  savedAddresses: []
+};
+
 interface AppContextType {
   // Navigation & Routing
   activePage: ActivePage;
@@ -32,10 +50,12 @@ interface AppContextType {
   
   // Auth & Current User
   currentUser: User;
+  isAuthenticated: boolean;
   users: User[];
   setCurrentUserById: (userId: string) => void;
-  loginUser: (email: string, role?: 'buyer' | 'seller' | 'admin') => boolean;
-  registerUser: (userData: Partial<User>) => void;
+  loginUser: (identifier: string, password?: string) => boolean;
+  logoutUser: () => void;
+  registerUser: (userData: Partial<User>, password?: string) => User;
   updateUserProfile: (updates: Partial<User>) => void;
   updateProfilePhoto: (photoUrl: string) => void;
   removeProfilePhoto: () => void;
@@ -43,6 +63,12 @@ interface AppContextType {
   updateSavedAddress: (address: Address) => void;
   deleteSavedAddress: (addressId: string) => void;
   setDefaultAddress: (addressId: string) => void;
+  requireAuth: (actionName: string, onSuccess: () => void) => boolean;
+
+  // Real-world Marketplace Mode
+  isLiveProductionMode: boolean;
+  clearSampleData: () => void;
+  restoreSampleData: () => void;
   
   // Products & Catalog
   products: Product[];
@@ -141,6 +167,7 @@ const STORAGE_KEYS = {
   REPORTS: 'easymart_reports_v1',
   TICKETS: 'easymart_tickets_v1',
   SELECTED_CITY: 'easymart_selected_city_v1',
+  IS_LIVE_MODE: 'easymart_is_live_mode_v1',
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -199,15 +226,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
-    return saved || 'usr-buyer-demo';
+    return saved !== null ? saved : 'usr-buyer-demo';
   });
 
-  const currentUser = users.find(u => u.id === currentUserId) || users[0] || INITIAL_USERS[0];
+  const isAuthenticated = Boolean(currentUserId && currentUserId !== 'guest' && users.some(u => u.id === currentUserId));
+  const currentUser = isAuthenticated
+    ? (users.find(u => u.id === currentUserId) || users[0] || GUEST_USER)
+    : GUEST_USER;
+
+  const [isLiveProductionMode, setIsLiveProductionMode] = useState<boolean>(() => {
+    return localStorage.getItem(STORAGE_KEYS.IS_LIVE_MODE) === 'true';
+  });
 
   const setCurrentUserById = (userId: string) => {
     setCurrentUserId(userId);
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, userId);
     showToast(`Switched profile to ${users.find(u => u.id === userId)?.name || 'User'}`, 'info');
+  };
+
+  const logoutUser = () => {
+    setCurrentUserId('guest');
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, 'guest');
+    showToast('Signed out. You are now browsing as a guest.', 'info');
+    navigateTo('home');
+  };
+
+  const requireAuth = (actionName: string, onSuccess: () => void): boolean => {
+    if (isAuthenticated) {
+      onSuccess();
+      return true;
+    }
+    showToast(`Please sign in or register to ${actionName}.`, 'info');
+    navigateTo('login');
+    return false;
+  };
+
+  const clearSampleData = () => {
+    // Retain only user-created products (not starting with initial 'prod-1' through 'prod-12')
+    const userProducts = products.filter(p => !p.id.match(/^prod-[0-9]+$/));
+    setProducts(userProducts);
+    setOrders([]);
+    setReviews([]);
+    setConversations([]);
+    setChatMessages({});
+    setIsLiveProductionMode(true);
+    localStorage.setItem(STORAGE_KEYS.IS_LIVE_MODE, 'true');
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(userProducts));
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify({}));
+    showToast('Marketplace cleared! Ready for 100% real user postings.', 'success');
+  };
+
+  const restoreSampleData = () => {
+    setProducts(INITIAL_PRODUCTS);
+    setOrders(INITIAL_ORDERS);
+    setReviews(INITIAL_REVIEWS);
+    setConversations(INITIAL_CONVERSATIONS);
+    setChatMessages(INITIAL_CHAT_MESSAGES);
+    setIsLiveProductionMode(false);
+    localStorage.removeItem(STORAGE_KEYS.IS_LIVE_MODE);
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(INITIAL_PRODUCTS));
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
+    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(INITIAL_REVIEWS));
+    localStorage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(INITIAL_CONVERSATIONS));
+    localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(INITIAL_CHAT_MESSAGES));
+    showToast('Starter catalogue restored for preview and evaluation.', 'info');
   };
 
   // Products
@@ -378,38 +463,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [helpTickets]);
 
   // Auth Functions
-  const loginUser = (email: string, role?: 'buyer' | 'seller' | 'admin') => {
-    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const loginUser = (identifier: string, password?: string): boolean => {
+    const trimmed = identifier.trim();
+    const cleanPhone = trimmed.replace(/\D/g, '');
+
+    // Check if user exists by email or phone
+    const existing = users.find(u => {
+      if (u.email.toLowerCase() === trimmed.toLowerCase()) return true;
+      if (cleanPhone.length >= 10 && u.phone.replace(/\D/g, '').endsWith(cleanPhone.slice(-10))) return true;
+      return false;
+    });
+
     if (existing) {
+      if (existing.password && password && existing.password !== password) {
+        showToast('Incorrect password. Please verify and try again.', 'error');
+        return false;
+      }
       setCurrentUserId(existing.id);
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, existing.id);
       showToast(`Welcome back, ${existing.name}!`);
       return true;
     }
-    // Auto-create if not found for seamless test demo
-    const namePart = email.split('@')[0];
+
+    // Real new user registration if email or phone is entered
+    const isEmail = trimmed.includes('@');
+    const namePart = isEmail ? trimmed.split('@')[0] : `User ${cleanPhone.slice(-4)}`;
     const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+
     const newUser: User = {
       id: `usr-${Date.now()}`,
       name: formattedName,
-      email,
-      phone: '+91 98765 43210',
+      email: isEmail ? trimmed.toLowerCase() : `${cleanPhone}@easymart.in`,
+      phone: cleanPhone.length >= 10 ? `+91 ${cleanPhone.slice(-10, -5)} ${cleanPhone.slice(-5)}` : '+91 98765 43210',
+      password: password || 'pass@123',
       avatar: '',
       city: 'Bengaluru',
       state: 'Karnataka',
       rating: 5.0,
       reviewCount: 0,
       isVerified: true,
-      memberSince: 'Just now',
-      bio: 'New member on EasyMart India.',
-      upiId: `${namePart}@okhdfcbank`,
-      role: role || 'buyer',
+      memberSince: 'Today',
+      bio: 'Verified member on EasyMart India.',
+      upiId: `${namePart.toLowerCase().replace(/[^a-z0-9]/g, '')}@upi`,
+      role: 'buyer',
       savedAddresses: [
         {
           id: `addr-${Date.now()}`,
           fullName: formattedName,
-          phone: '+91 98765 43210',
-          addressLine1: 'Flat 101, Prestige Palms',
+          phone: cleanPhone.length >= 10 ? `+91 ${cleanPhone.slice(-10)}` : '+91 98765 43210',
+          addressLine1: 'Main Road, Green City',
           city: 'Bengaluru',
           state: 'Karnataka',
           pincode: '560001',
@@ -419,36 +521,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]
     };
 
-    setUsers(prev => [...prev, newUser]);
+    setUsers(prev => [newUser, ...prev]);
     setCurrentUserId(newUser.id);
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, newUser.id);
     showToast(`Account created & logged in as ${newUser.name}!`);
     return true;
   };
 
-  const registerUser = (userData: Partial<User>) => {
+  const registerUser = (userData: Partial<User>, password?: string): User => {
+    const rawName = userData.name?.trim() || 'New Member';
+    const email = userData.email?.trim().toLowerCase() || `user_${Date.now()}@easymart.in`;
+    const phone = userData.phone?.trim() || '+91 98765 43210';
+    const city = userData.city?.trim() || 'Mumbai';
+    const state = userData.state?.trim() || 'Maharashtra';
+    const upiId = userData.upiId?.trim() || `${rawName.toLowerCase().replace(/\s+/g, '')}@okaxis`;
+
     const newUser: User = {
       id: `usr-${Date.now()}`,
-      name: userData.name || 'New Member',
-      email: userData.email || 'user@example.in',
-      phone: userData.phone || '+91 98765 43210',
+      name: rawName,
+      email,
+      phone,
+      password: password || userData.password || 'password123',
       avatar: userData.avatar || '',
-      city: userData.city || 'Mumbai',
-      state: userData.state || 'Maharashtra',
+      city,
+      state,
       rating: 5.0,
       reviewCount: 0,
       isVerified: true,
       memberSince: 'Today',
       bio: userData.bio || 'Verified member on EasyMart India.',
-      upiId: userData.upiId || 'easymart.user@upi',
+      upiId,
       role: userData.role || 'buyer',
-      savedAddresses: userData.savedAddresses || []
+      savedAddresses: userData.savedAddresses && userData.savedAddresses.length > 0 ? userData.savedAddresses : [
+        {
+          id: `addr-${Date.now()}`,
+          fullName: rawName,
+          phone,
+          addressLine1: 'Doorstep Address, Main Road',
+          city,
+          state,
+          pincode: '400001',
+          isDefault: true,
+          label: 'Home'
+        }
+      ]
     };
 
-    setUsers(prev => [...prev, newUser]);
+    setUsers(prev => [newUser, ...prev]);
     setCurrentUserId(newUser.id);
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, newUser.id);
-    showToast(`Welcome to EasyMart, ${newUser.name}!`);
+    showToast(`Welcome to EasyMart, ${newUser.name}! Your account is 100% active.`);
+    return newUser;
   };
 
   const updateUserProfile = (updates: Partial<User>) => {
@@ -905,10 +1028,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         navParams,
         navigateTo,
         currentUser,
+        isAuthenticated,
         users,
         setCurrentUserById,
         loginUser,
+        logoutUser,
         registerUser,
+        requireAuth,
+        isLiveProductionMode,
+        clearSampleData,
+        restoreSampleData,
         updateUserProfile,
         updateProfilePhoto,
         removeProfilePhoto,

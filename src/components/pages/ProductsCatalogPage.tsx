@@ -12,7 +12,7 @@ export const ProductsCatalogPage: React.FC = () => {
   const { 
     products, categories, navParams, navigateTo, 
     searchQuery, setSearchQuery, selectedCity, setSelectedCity,
-    isWishlisted, toggleWishlist, openPaymentModal 
+    isWishlisted, toggleWishlist, openPaymentModal, requireAuth 
   } = useApp();
 
   // Filters State
@@ -397,11 +397,11 @@ export const ProductsCatalogPage: React.FC = () => {
                   key={product.id}
                   product={product}
                   isWishlisted={isWishlisted(product.id)}
-                  onToggleWishlist={() => toggleWishlist(product.id)}
+                  onToggleWishlist={() => requireAuth('save this product to your wishlist', () => toggleWishlist(product.id))}
                   onClick={() => navigateTo('product-details', { productId: product.id })}
                   onQuickBuy={(e) => {
                     e.stopPropagation();
-                    openPaymentModal(product);
+                    requireAuth('buy this product with escrow', () => openPaymentModal(product));
                   }}
                 />
               ))}
