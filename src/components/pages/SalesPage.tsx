@@ -149,6 +149,90 @@ export const SalesPage: React.FC = () => {
         </div>
       </div>
 
+      {/* UPI ID Missing Notice */}
+      {!currentUser.upiId && (
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <p className="font-bold">Payout UPI ID Not Configured</p>
+              <p className="text-amber-800 text-[11px] mt-0.5">
+                Add your UPI address (e.g. mobile@paytm, name@okhdfcbank) in your profile so buyers&apos; escrow funds can be credited to your account automatically upon delivery.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigateTo('my-profile')}
+            className="self-start sm:self-auto px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shrink-0 transition"
+          >
+            Add Payout UPI ID
+          </button>
+        </div>
+      )}
+
+      {/* Step-by-Step Explanation: How Seller Receives Payment */}
+      <div className="bg-gradient-to-br from-emerald-900 via-neutral-900 to-neutral-900 text-white rounded-3xl p-6 sm:p-7 border border-emerald-800/40 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>100% Escrow Protection Payout Flow</span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold font-display text-white">
+              How Will You Receive Your Money as a Seller?
+            </h3>
+            <p className="text-xs text-neutral-300 max-w-2xl">
+              EasyMart protects both buyers and sellers with an automated 4-step escrow payout cycle:
+            </p>
+          </div>
+          <span className="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-3 py-1.5 rounded-xl border border-emerald-700/50 self-start sm:self-auto">
+            0% Platform Fee • 100% Direct Payout
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
+            <div className="w-7 h-7 rounded-full bg-emerald-500 text-neutral-950 font-black text-xs flex items-center justify-center font-mono">
+              1
+            </div>
+            <h4 className="font-bold text-xs text-emerald-300">Buyer Pays in Escrow</h4>
+            <p className="text-[11px] text-neutral-300 leading-relaxed">
+              When a buyer purchases your item, 100% of the funds are locked in the EasyMart RBI-compliant Escrow Vault. Your payment is guaranteed before you even pack.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
+            <div className="w-7 h-7 rounded-full bg-emerald-500 text-neutral-950 font-black text-xs flex items-center justify-center font-mono">
+              2
+            </div>
+            <h4 className="font-bold text-xs text-emerald-300">You Ship the Parcel</h4>
+            <p className="text-[11px] text-neutral-300 leading-relaxed">
+              Pack your item (&lt;5kg) and ship via Delhivery, Blue Dart, DTDC, India Post, or local handover. Click <strong className="text-white">&ldquo;Pack &amp; Enter Waybill&rdquo;</strong> to attach the tracking AWB.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
+            <div className="w-7 h-7 rounded-full bg-emerald-500 text-neutral-950 font-black text-xs flex items-center justify-center font-mono">
+              3
+            </div>
+            <h4 className="font-bold text-xs text-emerald-300">Get 6-Digit Code</h4>
+            <p className="text-[11px] text-neutral-300 leading-relaxed">
+              Upon doorstep parcel delivery, the buyer gives you their <strong className="text-white">6-Digit Secret Handover Code</strong> (found in their Purchases tab) after inspecting the item.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
+            <div className="w-7 h-7 rounded-full bg-emerald-500 text-neutral-950 font-black text-xs flex items-center justify-center font-mono">
+              4
+            </div>
+            <h4 className="font-bold text-xs text-emerald-300">Instant UPI Credit</h4>
+            <p className="text-[11px] text-neutral-300 leading-relaxed">
+              Click <strong className="text-white">&ldquo;Verify Handover Code&rdquo;</strong> and enter the 6 digits. The escrow vault immediately transfers the payment straight to your UPI ID (<span className="text-emerald-400 font-mono">{currentUser.upiId || 'your UPI VPA'}</span>).
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Sales Orders List */}
       {mySales.length === 0 ? (
         <div className="bg-white rounded-3xl border border-neutral-200 p-12 text-center space-y-4 shadow-xs">
