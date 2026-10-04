@@ -657,9 +657,12 @@ export const MyProfilePage: React.FC = () => {
                   <option value="Aadhaar">Indian Aadhaar Number</option>
                   <option value="Voter ID">Election Voter ID</option>
                 </select>
+                <span className="text-[10px] text-neutral-400 mt-1 block">Choose ID document for seller trust badge</span>
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-neutral-600 mb-1">Document Ref (Last 4 digits or Number)</label>
+                <label className="block text-[11px] font-bold text-neutral-600 mb-1">
+                  Document Reference Number (Full or Last 4 Digits)
+                </label>
                 <input
                   type="text"
                   value={kycDocNumber}
@@ -667,6 +670,9 @@ export const MyProfilePage: React.FC = () => {
                   placeholder="e.g. ABCDE1234F or •••• 5678"
                   className="w-full px-3 py-2 text-xs font-mono bg-white border border-neutral-300 rounded-xl"
                 />
+                <span className="text-[10px] text-neutral-500 mt-1 block">
+                  You can enter just the last 4 digits (e.g. •••• 5678) for privacy.
+                </span>
               </div>
             </div>
           </div>
