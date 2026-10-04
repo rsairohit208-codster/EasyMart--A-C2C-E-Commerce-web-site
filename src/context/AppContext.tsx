@@ -131,6 +131,7 @@ interface AppContextType {
   updateOrderStatus: (orderId: string, status: OrderStatus, trackingNumber?: string, courierPartner?: string) => void;
   releaseEscrow: (orderId: string) => void;
   verifyDeliveryOtp: (orderId: string, enteredOtp: string) => { success: boolean; message: string };
+  verifyDeliveryOtpByCode: (enteredOtp: string) => { success: boolean; message: string; order?: Order };
   raiseDispute: (orderId: string, reason: string) => void;
   
   // Reviews
@@ -1171,6 +1172,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: 'OTP verified! Escrow payout completed.' };
   };
 
+  const verifyDeliveryOtpByCode = (enteredOtp: string): { success: boolean; message: string; order?: Order } => {
+    const cleanInput = enteredOtp.trim().replace(/\D/g, '');
+    if (!cleanInput || cleanInput.length !== 6) {
+      showToast('Please enter a valid 6-digit handover code.', 'error');
+      return { success: false, message: 'Invalid code format. Must be 6 digits.' };
+    }
+
+    const order = orders.find(o => o.deliveryOtp === cleanInput);
+    if (!order) {
+      showToast(`No order found matching code "${cleanInput}". Ask buyer to check their Purchases tab.`, 'error');
+      return { success: false, message: 'No matching order found for this code.' };
+    }
+
+    if (order.status === 'delivered' || order.escrowStatus === 'released_to_seller') {
+      showToast(`Order #${order.orderNumber} is already verified and ₹${order.amount} was released!`, 'info');
+      return { success: true, message: 'Order already delivered and payout released.', order };
+    }
+
+    const res = verifyDeliveryOtp(order.id, cleanInput);
+    return { ...res, order };
+  };
+
   const raiseDispute = (orderId: string, reason: string) => {
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
@@ -1434,6 +1457,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateOrderStatus,
         releaseEscrow,
         verifyDeliveryOtp,
+        verifyDeliveryOtpByCode,
         raiseDispute,
         reviews,
         addReview,

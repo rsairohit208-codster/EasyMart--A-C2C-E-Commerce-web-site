@@ -8,7 +8,7 @@ import { useApp } from '../../context/AppContext';
 export const SalesPage: React.FC = () => {
   const { 
     currentUser, isAuthenticated, navigateTo, orders, 
-    updateOrderStatus, verifyDeliveryOtp, startConversation, showToast 
+    updateOrderStatus, verifyDeliveryOtp, verifyDeliveryOtpByCode, startConversation, showToast 
   } = useApp();
 
   if (!isAuthenticated) {
@@ -60,6 +60,20 @@ export const SalesPage: React.FC = () => {
   // Delivery OTP verification modal
   const [activeOtpOrder, setActiveOtpOrder] = useState<string | null>(null);
   const [enteredOtp, setEnteredOtp] = useState('');
+
+  // Quick Direct OTP Verification
+  const [directOtpInput, setDirectOtpInput] = useState('');
+  const [lastVerifiedOrder, setLastVerifiedOrder] = useState<any>(null);
+
+  const handleDirectOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directOtpInput.trim()) return;
+    const res = verifyDeliveryOtpByCode(directOtpInput.trim());
+    if (res.success && res.order) {
+      setLastVerifiedOrder(res.order);
+      setDirectOtpInput('');
+    }
+  };
 
   const handleDispatch = (orderId: string) => {
     if (!trackingNumber.trim()) {
@@ -170,6 +184,70 @@ export const SalesPage: React.FC = () => {
         </div>
       )}
 
+      {/* Direct 6-Digit Handover Code Verification Console (Always Visible) */}
+      <div className="bg-white rounded-3xl border-2 border-emerald-500/50 p-6 sm:p-7 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                <KeyRound className="w-4 h-4 text-amber-700" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-neutral-900 font-display">
+                Enter 6-Digit Buyer Handover Code
+              </h3>
+            </div>
+            <p className="text-xs text-neutral-600 max-w-xl">
+              When you or your courier hand over the parcel, ask the buyer for their 6-digit Secret Delivery Code (visible in their Purchases tab). Enter it below to release the escrow payout immediately to your UPI!
+            </p>
+          </div>
+          <span className="text-[11px] font-mono font-bold px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full border border-emerald-200 self-start sm:self-auto">
+            Instant UPI Settlement
+          </span>
+        </div>
+
+        <form onSubmit={handleDirectOtpSubmit} className="flex flex-col sm:flex-row gap-3 pt-1">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              required
+              maxLength={6}
+              value={directOtpInput}
+              onChange={(e) => setDirectOtpInput(e.target.value.replace(/\D/g, ''))}
+              placeholder="Enter 6-Digit Code (e.g. 849201)"
+              className="w-full px-4 py-3.5 text-base sm:text-lg font-mono font-bold tracking-widest text-center sm:text-left bg-neutral-50 border border-neutral-300 rounded-2xl outline-none focus:border-emerald-500 focus:bg-white transition"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={directOtpInput.length !== 6}
+            className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-200 disabled:text-neutral-400 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xs transition flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:cursor-not-allowed"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Verify &amp; Claim Payout</span>
+          </button>
+        </form>
+
+        {lastVerifiedOrder && (
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-950">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <p className="font-bold">Payout Released! ₹{lastVerifiedOrder.amount} sent to UPI</p>
+                <p className="text-emerald-800 text-[11px]">
+                  Order #{lastVerifiedOrder.orderNumber} ({lastVerifiedOrder.productTitle}) • Disbursed to {lastVerifiedOrder.sellerUpiId}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setLastVerifiedOrder(null)}
+              className="text-[11px] font-bold text-emerald-700 hover:underline self-start sm:self-auto"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Step-by-Step Explanation: How Seller Receives Payment */}
       <div className="bg-gradient-to-br from-emerald-900 via-neutral-900 to-neutral-900 text-white rounded-3xl p-6 sm:p-7 border border-emerald-800/40 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -228,6 +306,17 @@ export const SalesPage: React.FC = () => {
             <h4 className="font-bold text-xs text-emerald-300">Instant UPI Credit</h4>
             <p className="text-[11px] text-neutral-300 leading-relaxed">
               Click <strong className="text-white">&ldquo;Verify Handover Code&rdquo;</strong> and enter the 6 digits. The escrow vault immediately transfers the payment straight to your UPI ID (<span className="text-emerald-400 font-mono">{currentUser.upiId || 'your UPI VPA'}</span>).
+            </p>
+          </div>
+        </div>
+
+        {/* Protection Guarantee for Sellers */}
+        <div className="p-3.5 bg-emerald-950/70 border border-emerald-700/40 rounded-2xl flex items-start gap-3 text-xs text-emerald-200">
+          <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <p className="font-bold text-white">What if the buyer forgets to click Confirm or doesn&apos;t respond?</p>
+            <p className="text-[11px] text-neutral-300 leading-relaxed">
+              <strong>You are 100% protected:</strong> Payout does <em>not</em> rely only on the buyer! You can enter their 6-digit handover code directly, or once courier tracking confirms doorstep delivery, our <strong>48-hour Auto-Release Window</strong> automatically releases the full funds to your UPI account if no dispute is opened.
             </p>
           </div>
         </div>
@@ -304,10 +393,24 @@ export const SalesPage: React.FC = () => {
                     <button
                       onClick={() => setActiveOtpOrder(order.id)}
                       className="w-full sm:w-auto px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
-                      title="Enter the 6-digit code received from buyer to release payout"
+                      title="Enter the 6-digit code received from buyer to release payout immediately"
                     >
                       <KeyRound className="w-3.5 h-3.5 text-amber-700" />
                       <span>Verify Handover Code</span>
+                    </button>
+                  )}
+
+                  {order.status === 'dispatched' && !isDelivered && (
+                    <button
+                      onClick={() => {
+                        updateOrderStatus(order.id, 'delivered');
+                        showToast('Doorstep delivery confirmed! Escrow funds released to your UPI.', 'success');
+                      }}
+                      className="w-full sm:w-auto px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
+                      title="Release payout when courier tracking shows delivered or 48 hours lapse"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Claim Delivered Payout</span>
                     </button>
                   )}
 

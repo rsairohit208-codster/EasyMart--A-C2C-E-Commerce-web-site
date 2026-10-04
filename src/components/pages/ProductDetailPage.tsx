@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, MapPin, Heart, MessageSquare, Tag, 
   Share2, AlertTriangle, Truck, Clock, CheckCircle2, 
-  Star, ChevronLeft, ArrowRight, UserCheck, Lock, ExternalLink
+  Star, ChevronLeft, ArrowRight, UserCheck, Lock, ExternalLink, KeyRound
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './HomePage';
@@ -13,7 +13,7 @@ export const ProductDetailPage: React.FC = () => {
     navParams, products, isProductsLoading, navigateTo, isWishlisted, 
     toggleWishlist, openPaymentModal, openReportModal, 
     startConversation, reviews, addReview, currentUser,
-    isAuthenticated, requireAuth,
+    isAuthenticated, requireAuth, orders, verifyDeliveryOtpByCode,
     incrementProductViews, showToast 
   } = useApp();
 
@@ -27,6 +27,19 @@ export const ProductDetailPage: React.FC = () => {
   // Review form state
   const [ratingVal, setRatingVal] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+
+  // Handover Code Verification for Seller
+  const [codeVerificationInput, setCodeVerificationInput] = useState('');
+  const matchingOrder = orders.find(o => o.productId === productId && o.status !== 'cancelled');
+
+  const handleVerifyProductCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!codeVerificationInput.trim()) return;
+    const res = verifyDeliveryOtpByCode(codeVerificationInput.trim());
+    if (res.success) {
+      setCodeVerificationInput('');
+    }
+  };
 
   useEffect(() => {
     if (product) {
@@ -261,6 +274,53 @@ export const ProductDetailPage: React.FC = () => {
 
           {/* Action CTAs */}
           <div className="space-y-3 pt-2">
+            {/* Handover Code Verification Banner (If product is reserved/ordered) */}
+            {(product.status === 'reserved' || (matchingOrder && matchingOrder.status !== 'delivered')) && (
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-emerald-50 rounded-2xl border-2 border-emerald-500/50 space-y-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="w-5 h-5 text-emerald-700" />
+                    <span className="font-bold text-sm text-neutral-900">
+                      Payment Secured in Escrow (Awaiting Handover)
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                    ₹{product.price} in Escrow
+                  </span>
+                </div>
+
+                <p className="text-xs text-neutral-600 leading-relaxed">
+                  <strong>Seller Handover:</strong> Handing over this item to the buyer? Enter the 6-digit Secret Delivery Code provided by the buyer to immediately release the escrow payout to your UPI!
+                </p>
+
+                <form onSubmit={handleVerifyProductCode} className="flex gap-2 pt-1">
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={codeVerificationInput}
+                    onChange={(e) => setCodeVerificationInput(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Enter 6-digit code"
+                    className="flex-1 px-3 py-2 text-center font-mono font-bold tracking-widest text-sm bg-white border border-neutral-300 rounded-xl focus:border-emerald-500 outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={codeVerificationInput.length !== 6}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-300 text-white font-bold text-xs rounded-xl shadow-xs transition shrink-0"
+                  >
+                    Verify &amp; Claim Payout
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {matchingOrder && matchingOrder.status === 'delivered' && (
+              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center gap-2 text-xs text-emerald-900 font-semibold">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>Handover verified! ₹{matchingOrder.amount} escrow payout released to seller UPI.</span>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 id="product-buy-now-btn"
@@ -269,7 +329,13 @@ export const ProductDetailPage: React.FC = () => {
                 className="flex-1 py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-0.5"
               >
                 <Lock className="w-4 h-4" />
-                <span>Buy Now with Escrow (₹{product.price + product.shippingFee})</span>
+                <span>
+                  {product.status === 'reserved' 
+                    ? 'Item Reserved (Pending Handover)' 
+                    : product.status === 'sold'
+                    ? 'Item Sold'
+                    : `Buy Now with Escrow (₹${product.price + product.shippingFee})`}
+                </span>
               </button>
 
               <button

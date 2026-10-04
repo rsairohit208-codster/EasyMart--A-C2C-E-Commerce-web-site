@@ -350,6 +350,9 @@ export const OrdersPage: React.FC = () => {
                             <CheckCircle2 className="w-4 h-4" />
                             <span>Confirm Delivery &amp; Release Funds to Seller</span>
                           </button>
+                          <p className="text-[10px] text-neutral-400 text-center">
+                            Funds release upon your confirmation, sharing the 6-digit code, or 48h after courier delivery.
+                          </p>
 
                           <div className="flex gap-2">
                             <button
