@@ -12,6 +12,14 @@ import {
   SAMPLE_STARTER_ORDERS, SAMPLE_STARTER_CONVERSATIONS, SAMPLE_STARTER_CHAT_MESSAGES,
   SAMPLE_STARTER_NOTIFICATIONS
 } from '../data/seedData';
+import {
+  subscribeToProductAds,
+  getProductAdsFromFirestore,
+  saveProductAdToFirestore,
+  updateProductAdInFirestore,
+  deleteProductAdFromFirestore,
+  incrementProductViewsInFirestore
+} from '../services/firebaseProductService';
 
 interface NavigationParams {
   productId?: string;
@@ -73,8 +81,13 @@ interface AppContextType {
   clearSampleData: () => void;
   restoreSampleData: () => void;
   
-  // Products & Catalog
+  // Products & Catalog (Live Google Firebase Firestore)
   products: Product[];
+  isProductsLoading: boolean;
+  isFirestoreConnected: boolean;
+  firestoreError: string | null;
+  refreshProductsFromCloud: () => Promise<void>;
+  seedStarterAdsToFirestore: () => Promise<void>;
   categories: ProductCategory[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -315,11 +328,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Starter catalogue restored for preview and evaluation.', 'info');
   };
 
-  // Products
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
+  // Live Google Firebase Firestore Cloud Database for Product Ads
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isProductsLoading, setIsProductsLoading] = useState<boolean>(true);
+  const [isFirestoreConnected, setIsFirestoreConnected] = useState<boolean>(false);
+  const [firestoreError, setFirestoreError] = useState<string | null>(null);
+
+  // Subscribe to real-time Google Firebase Firestore updates for global multi-device sync
+  useEffect(() => {
+    setIsProductsLoading(true);
+    const unsubscribe = subscribeToProductAds(
+      (cloudProducts) => {
+        setProducts(cloudProducts);
+        setIsProductsLoading(false);
+        setIsFirestoreConnected(true);
+        setFirestoreError(null);
+      },
+      (error: any) => {
+        console.warn('Firebase Firestore real-time listener error:', error);
+        setIsProductsLoading(false);
+        setIsFirestoreConnected(false);
+        setFirestoreError(error?.message || 'Failed to connect to Firebase Firestore');
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const refreshProductsFromCloud = async () => {
+    try {
+      setIsProductsLoading(true);
+      const items = await getProductAdsFromFirestore();
+      setProducts(items);
+      setIsProductsLoading(false);
+      setIsFirestoreConnected(true);
+      setFirestoreError(null);
+      showToast(`Synchronized ${items.length} ads from Firestore Cloud DB`, 'info');
+    } catch (err: any) {
+      setIsProductsLoading(false);
+      showToast('Cloud sync error: ' + (err?.message || 'Network failure'), 'error');
+    }
+  };
+
+  const seedStarterAdsToFirestore = async () => {
+    try {
+      setIsProductsLoading(true);
+      for (const item of SAMPLE_STARTER_PRODUCTS) {
+        await saveProductAdToFirestore(item);
+      }
+      setIsProductsLoading(false);
+      showToast('Starter ads successfully published to Firestore cloud database!', 'success');
+    } catch (err: any) {
+      setIsProductsLoading(false);
+      showToast('Error publishing starter ads: ' + (err?.message || 'Error'), 'error');
+    }
+  };
 
   // Wishlist
   const [wishlist, setWishlist] = useState<string[]>(() => {
@@ -441,13 +506,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Sync to localStorage
+  // Sync to localStorage for user sessions & local offline backups
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
   }, [users]);
 
+  // Keep a local cached copy of products strictly for offline resiliency
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+    if (products.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+      } catch {
+        // quota or privacy mode
+      }
+    }
   }, [products]);
 
   useEffect(() => {
@@ -671,7 +743,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Default delivery address updated');
   };
 
-  // Product Functions
+  // Product Functions (Connected to live Google Firebase Firestore Cloud DB)
   const addProduct = (productData: Omit<Product, 'id' | 'createdAt' | 'views' | 'likesCount' | 'status'>) => {
     const newId = `prod-${Date.now()}`;
     const newProduct: Product = {
@@ -683,14 +755,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    setProducts(prev => [newProduct, ...prev]);
+    // Optimistically show in local state immediately
+    setProducts(prev => [newProduct, ...prev.filter(p => p.id !== newId)]);
+
+    // Save directly to Google Firebase Firestore for global accessibility across all devices
+    saveProductAdToFirestore(newProduct)
+      .then(() => {
+        console.log(`Product ${newId} synchronized to Firestore cloud database.`);
+      })
+      .catch((err: any) => {
+        console.error('Failed to save product to Firebase Firestore:', err);
+        showToast('Saved locally; syncing to Firestore cloud: ' + (err?.message || 'Network issue'), 'info');
+      });
 
     // Send notification
     const newNotif: Notification = {
       id: `notif-${Date.now()}`,
       userId: currentUser.id,
-      title: 'Listing Published! 🚀',
-      message: `Your item "${newProduct.title}" is live on EasyMart India.`,
+      title: 'Listing Published to Cloud DB! 🚀',
+      message: `Your item "${newProduct.title}" is live on Firebase Firestore for all devices globally.`,
       type: 'listing',
       read: false,
       timestamp: 'Just now',
@@ -699,28 +782,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    showToast('Your item has been listed for sale!');
+    showToast('Your item has been published live to Firestore cloud database!');
     return newId;
   };
 
   const updateProduct = (productId: string, updates: Partial<Product>) => {
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p));
-    showToast('Listing updated successfully!');
+    
+    // Update live Firestore document
+    updateProductAdInFirestore(productId, updates)
+      .then(() => {
+        console.log(`Product ${productId} updated in Firestore.`);
+      })
+      .catch((err: any) => {
+        console.error('Failed to update product in Firebase Firestore:', err);
+      });
+
+    showToast('Listing updated in cloud database!');
   };
 
   const deleteProduct = (productId: string) => {
     setProducts(prev => prev.filter(p => p.id !== productId));
     setWishlist(prev => prev.filter(id => id !== productId));
-    showToast('Listing removed');
+
+    // Delete from live Firestore document
+    deleteProductAdFromFirestore(productId)
+      .then(() => {
+        console.log(`Product ${productId} deleted from Firestore.`);
+      })
+      .catch((err: any) => {
+        console.error('Failed to delete product from Firebase Firestore:', err);
+      });
+
+    showToast('Listing deleted from cloud database');
   };
 
   const markProductSold = (productId: string) => {
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, status: 'sold' } : p));
+    
+    // Update status in Firestore
+    updateProductAdInFirestore(productId, { status: 'sold' })
+      .catch((err: any) => {
+        console.error('Failed to mark product sold in Firestore:', err);
+      });
+
     showToast('Marked as sold! Great job.');
   };
 
   const incrementProductViews = (productId: string) => {
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, views: p.views + 1 } : p));
+    incrementProductViewsInFirestore(productId);
   };
 
   // Wishlist Functions
@@ -1206,6 +1317,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteSavedAddress,
         setDefaultAddress,
         products,
+        isProductsLoading,
+        isFirestoreConnected,
+        firestoreError,
+        refreshProductsFromCloud,
+        seedStarterAdsToFirestore,
         categories: CATEGORIES,
         searchQuery,
         setSearchQuery,

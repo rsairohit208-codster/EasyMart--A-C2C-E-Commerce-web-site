@@ -10,7 +10,7 @@ import { AvatarPlaceholder } from '../common/AvatarPlaceholder';
 
 export const ProductDetailPage: React.FC = () => {
   const { 
-    navParams, products, navigateTo, isWishlisted, 
+    navParams, products, isProductsLoading, navigateTo, isWishlisted, 
     toggleWishlist, openPaymentModal, openReportModal, 
     startConversation, reviews, addReview, currentUser,
     isAuthenticated, requireAuth,
@@ -36,6 +36,15 @@ export const ProductDetailPage: React.FC = () => {
   }, [productId]);
 
   if (!product) {
+    if (isProductsLoading) {
+      return (
+        <div className="max-w-4xl mx-auto px-4 py-24 text-center space-y-4">
+          <div className="w-10 h-10 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs text-neutral-600 font-medium">Fetching listing from Google Firebase Firestore cloud database...</p>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
         <h2 className="text-xl font-bold text-neutral-800">Product Not Found</h2>

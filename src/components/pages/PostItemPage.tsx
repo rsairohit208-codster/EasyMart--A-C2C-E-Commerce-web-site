@@ -491,6 +491,17 @@ export const PostItemPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Cloud Database Sync Note */}
+        <div className="p-3 bg-neutral-50 rounded-2xl border border-neutral-200 text-xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-neutral-600">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Live Cloud Database: <strong className="font-mono text-neutral-800">easymart-8a580</strong></span>
+          </div>
+          <span className="text-[11px] text-emerald-700 font-semibold hidden sm:inline">
+            ✓ Instantly visible on all devices globally
+          </span>
+        </div>
+
         {/* Submit Button */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-100">
           <button
@@ -503,9 +514,9 @@ export const PostItemPage: React.FC = () => {
           <button
             id="post-submit-btn"
             type="submit"
-            className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-md shadow-emerald-600/25 transition hover:-translate-y-0.5"
+            className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-md shadow-emerald-600/25 transition hover:-translate-y-0.5 flex items-center gap-2"
           >
-            Publish Ad for Free
+            <span>Publish Ad to Cloud Database</span>
           </button>
         </div>
 

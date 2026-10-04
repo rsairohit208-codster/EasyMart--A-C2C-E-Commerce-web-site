@@ -10,7 +10,8 @@ export const AdminPanelPage: React.FC = () => {
   const { 
     currentUser, products, users, orders, reports, 
     resolveReport, deleteProduct, releaseEscrow, showToast,
-    updateProduct, isLiveProductionMode, clearSampleData, restoreSampleData
+    updateProduct, isLiveProductionMode, clearSampleData, restoreSampleData,
+    isFirestoreConnected, isProductsLoading, refreshProductsFromCloud, seedStarterAdsToFirestore
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'escrow' | 'listings' | 'users'>('overview');
@@ -168,38 +169,46 @@ export const AdminPanelPage: React.FC = () => {
 
           </div>
 
-          {/* 100% Real-World Live Marketplace Controls */}
+          {/* 100% Real-World Live Marketplace & Cloud DB Controls */}
           <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-3xl p-6 shadow-md space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500 text-neutral-950">
-                    {isLiveProductionMode ? '100% Real Live Mode Active' : 'Catalogue Active'}
+                  <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500 text-neutral-950 font-mono">
+                    {isFirestoreConnected ? 'Firebase Firestore Live' : 'Connecting to Firestore'}
                   </span>
-                  <span className="text-xs text-neutral-400">EasyMart India v2.0</span>
+                  <span className="text-xs text-neutral-400 font-mono">Project: easymart-8a580</span>
                 </div>
                 <h3 className="text-base sm:text-lg font-bold mt-1 text-white">
-                  Real-World Marketplace Launch &amp; Data Controls
+                  Google Firebase Firestore Cloud Database Integration
                 </h3>
                 <p className="text-xs text-neutral-300 max-w-2xl mt-0.5">
-                  Prepare this instance for 100% real-world deployment on Netlify. You can clear starter example products to start with a clean slate for real Indian users, or restore the starter catalogue whenever testing.
+                  Product ads are saved directly in your live Google Firebase Firestore cloud collection (<code className="text-emerald-400 font-mono">products</code>), providing instant global multi-device synchronization without depending on browser localStorage.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <button
-                  onClick={clearSampleData}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition shadow-sm flex items-center gap-1.5"
+                  onClick={() => refreshProductsFromCloud()}
+                  disabled={isProductsLoading}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm flex items-center gap-1.5"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Clear Sample Postings</span>
+                  <RefreshCw className={`w-3.5 h-3.5 ${isProductsLoading ? 'animate-spin' : ''}`} />
+                  <span>Sync Cloud DB</span>
                 </button>
                 <button
-                  onClick={restoreSampleData}
+                  onClick={() => seedStarterAdsToFirestore()}
+                  disabled={isProductsLoading}
                   className="px-3.5 py-2 rounded-xl text-xs font-bold bg-neutral-700 hover:bg-neutral-600 text-neutral-200 transition flex items-center gap-1.5"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Restore Starter Items</span>
+                  <span>Publish Starter Ads to Cloud</span>
+                </button>
+                <button
+                  onClick={clearSampleData}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-600/80 hover:bg-rose-600 text-white transition shadow-sm flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear Local Orders/Chats</span>
                 </button>
               </div>
             </div>

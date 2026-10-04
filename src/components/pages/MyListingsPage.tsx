@@ -6,7 +6,7 @@ import {
 import { useApp } from '../../context/AppContext';
 
 export const MyListingsPage: React.FC = () => {
-  const { currentUser, isAuthenticated, products, deleteProduct, markProductSold, navigateTo } = useApp();
+  const { currentUser, isAuthenticated, products, isProductsLoading, deleteProduct, markProductSold, navigateTo } = useApp();
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'reserved'>('all');
 
   if (!isAuthenticated) {
@@ -89,7 +89,22 @@ export const MyListingsPage: React.FC = () => {
       </div>
 
       {/* Listings List */}
-      {displayedListings.length === 0 ? (
+      {isProductsLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-neutral-200 p-5 space-y-3 animate-pulse">
+              <div className="flex gap-4">
+                <div className="w-24 h-24 bg-neutral-200 rounded-xl shrink-0"></div>
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
+                  <div className="h-3 bg-neutral-100 rounded w-1/3"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-20"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : displayedListings.length === 0 ? (
         <div className="bg-white rounded-3xl border border-neutral-200 p-12 text-center space-y-4">
           <div className="w-14 h-14 bg-neutral-100 text-neutral-400 rounded-full flex items-center justify-center mx-auto">
             <Package className="w-7 h-7" />

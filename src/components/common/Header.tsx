@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Search, MapPin, Heart, Bell, PlusCircle, ShieldCheck, 
+  Search, MapPin, Heart, Bell, PlusCircle, 
   User as UserIcon, Package, ShoppingBag, MessageSquare, 
-  HelpCircle, Settings, ChevronDown, Check, Sparkles, LogOut, ArrowRight, LogIn, UserPlus
+  HelpCircle, Settings, ChevronDown, Check, Sparkles, LogOut, ArrowRight
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MAJOR_INDIAN_CITIES } from '../../data/seedData';
@@ -12,7 +12,7 @@ export const Header: React.FC = () => {
   const { 
     currentUser, isAuthenticated, logoutUser, requireAuth, activePage, navigateTo, 
     searchQuery, setSearchQuery, selectedCity, setSelectedCity, 
-    wishlist, notifications, markNotificationRead, categories 
+    wishlist, notifications, markNotificationRead, categories
   } = useApp();
 
   const [isCityOpen, setIsCityOpen] = useState(false);
@@ -48,61 +48,6 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 shadow-xs">
-      {/* Top Bar for Trust & Escrow Guarantee */}
-      <div className="bg-neutral-900 text-neutral-300 text-xs py-1.5 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              EasyMart 100% Escrow Protection
-            </span>
-            <span className="hidden sm:inline text-neutral-500">•</span>
-            <span className="hidden sm:inline text-neutral-300">Payment released only after parcel inspection at your doorstep.</span>
-          </div>
-
-          <div className="flex items-center gap-3 sm:gap-4 text-[11px]">
-            <span className="text-amber-300 font-medium hidden md:inline">
-              🇮🇳 Pan-India Courier Network (Delhivery, BlueDart, India Post)
-            </span>
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => navigateTo('my-profile')}
-                  className="text-neutral-300 hover:text-white transition flex items-center gap-1"
-                >
-                  <span>Namaste,</span>
-                  <strong className="text-emerald-400 font-semibold underline underline-offset-2">{currentUser.name}</strong>
-                </button>
-                <span className="text-neutral-600">•</span>
-                <button
-                  onClick={logoutUser}
-                  className="text-neutral-400 hover:text-rose-300 transition"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 font-medium">
-                <button
-                  onClick={() => navigateTo('login')}
-                  className="text-emerald-400 hover:text-emerald-300 font-semibold transition flex items-center gap-1"
-                >
-                  <LogIn className="w-3 h-3" />
-                  <span>Sign In</span>
-                </button>
-                <span className="text-neutral-600">•</span>
-                <button
-                  onClick={() => navigateTo('register')}
-                  className="text-neutral-300 hover:text-white transition"
-                >
-                  Register Free
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3 sm:gap-6">

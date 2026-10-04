@@ -1,14 +1,15 @@
 import React from 'react';
 import { 
   ShieldCheck, Search, ArrowRight, Sparkles, MapPin, Heart, 
-  Package, CheckCircle2, ChevronRight, Lock, Truck, RefreshCw, AlertCircle
+  Package, CheckCircle2, ChevronRight, Lock, Truck, RefreshCw, AlertCircle, Database
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Product } from '../../types';
 
 export const HomePage: React.FC = () => {
   const { 
-    products, categories, navigateTo, isWishlisted, 
+    products, isProductsLoading, isFirestoreConnected, refreshProductsFromCloud,
+    categories, navigateTo, isWishlisted, 
     toggleWishlist, openPaymentModal, setSelectedCity,
     requireAuth
   } = useApp();
@@ -152,33 +153,58 @@ export const HomePage: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 font-display">
                 Featured Verified Listings
               </h2>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className={`w-1.5 h-1.5 rounded-full ${isFirestoreConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                Firestore Cloud DB
+              </span>
             </div>
-            <p className="text-xs text-neutral-500 mt-0.5">Top-rated peer listings with verified photos & fast pan-India shipping</p>
+            <p className="text-xs text-neutral-500 mt-0.5">Live ads synced globally across all devices from Google Firebase Firestore</p>
           </div>
-          <button
-            onClick={() => navigateTo('products')}
-            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 hover:underline"
-          >
-            <span>See Catalog</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => refreshProductsFromCloud()}
+              title="Refresh ads from cloud"
+              className="p-1.5 text-neutral-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isProductsLoading ? 'animate-spin text-emerald-600' : ''}`} />
+            </button>
+            <button
+              onClick={() => navigateTo('products')}
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 hover:underline"
+            >
+              <span>See Catalog</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {featuredProducts.length === 0 ? (
+          {isProductsLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-neutral-200 p-4 space-y-3 animate-pulse">
+                <div className="w-full h-44 bg-neutral-200 rounded-xl"></div>
+                <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
+                <div className="h-3 bg-neutral-100 rounded w-1/2"></div>
+                <div className="flex justify-between pt-2">
+                  <div className="h-5 bg-neutral-200 rounded w-20"></div>
+                  <div className="h-5 bg-neutral-100 rounded w-14"></div>
+                </div>
+              </div>
+            ))
+          ) : featuredProducts.length === 0 ? (
             <div className="col-span-full bg-white rounded-3xl border border-neutral-200/90 p-8 sm:p-12 text-center space-y-4 shadow-xs">
               <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto border border-emerald-100">
                 <Package className="w-8 h-8" />
               </div>
               <div className="space-y-1">
                 <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  Community Marketplace Live 🇮🇳
+                  Firebase Firestore Cloud DB Ready ☁️
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-900 font-display pt-1">
                   Be the First Neighbor to Post an Ad!
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-500 max-w-lg mx-auto leading-relaxed">
-                  All demo products have been cleared. EasyMart is 100% reserved for genuine real-world users buying and selling pre-loved study books, kitchen gadgets, mobile accessories, and home items with escrow protection.
+                  Ads posted here are stored directly in your live Google Firebase Firestore cloud database (<code className="text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded text-xs font-mono">easymart-8a580</code>) and appear in real-time across all mobile and desktop devices globally.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -187,13 +213,13 @@ export const HomePage: React.FC = () => {
                   className="w-full sm:w-auto px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2"
                 >
                   <Package className="w-4 h-4" />
-                  <span>Post the First Ad (+ Sell Free)</span>
+                  <span>Post the First Ad (+ Live Cloud Sync)</span>
                 </button>
                 <button
                   onClick={() => navigateTo('categories')}
                   className="w-full sm:w-auto px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-xs sm:text-sm rounded-xl transition"
                 >
-                  Browse Category Taxonomy
+                  Browse Categories
                 </button>
               </div>
             </div>

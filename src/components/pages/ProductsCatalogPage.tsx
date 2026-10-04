@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Filter, SlidersHorizontal, Search, X, Check, MapPin, 
-  ArrowUpDown, ShieldCheck, Sparkles, Tag, Package 
+  ArrowUpDown, ShieldCheck, Sparkles, Tag, Package, RefreshCw, Database
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './HomePage';
@@ -10,7 +10,8 @@ import { ProductCondition } from '../../types';
 
 export const ProductsCatalogPage: React.FC = () => {
   const { 
-    products, categories, navParams, navigateTo, 
+    products, isProductsLoading, isFirestoreConnected, refreshProductsFromCloud, seedStarterAdsToFirestore,
+    categories, navParams, navigateTo, 
     searchQuery, setSearchQuery, selectedCity, setSelectedCity,
     isWishlisted, toggleWishlist, openPaymentModal, requireAuth 
   } = useApp();
@@ -120,9 +121,25 @@ export const ProductsCatalogPage: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 font-display">
             Everyday Essentials Catalog (India)
           </h1>
-          <p className="text-xs text-neutral-500 mt-1">
-            Discover {filteredProducts.length} verified listings across Indian cities with Escrow protection
-          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <p className="text-xs text-neutral-500">
+              Discover {filteredProducts.length} live listings with Escrow protection
+            </p>
+            <span className="text-neutral-300">•</span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className={`w-1.5 h-1.5 rounded-full ${isFirestoreConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+              <Database className="w-2.5 h-2.5 text-emerald-600" />
+              <span>Firebase Cloud DB</span>
+            </span>
+            <button
+              onClick={() => refreshProductsFromCloud()}
+              title="Sync live ads from Firebase Firestore"
+              className="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-800 font-bold hover:underline"
+            >
+              <RefreshCw className={`w-3 h-3 ${isProductsLoading ? 'animate-spin' : ''}`} />
+              <span>Sync Cloud</span>
+            </button>
+          </div>
         </div>
 
         {/* Sort & Mobile Filter Toggle */}
@@ -374,29 +391,43 @@ export const ProductsCatalogPage: React.FC = () => {
           )}
 
           {/* Grid or Empty State */}
-          {products.length === 0 ? (
+          {isProductsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-neutral-200 p-4 space-y-3 animate-pulse">
+                  <div className="w-full h-48 bg-neutral-200 rounded-xl"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-neutral-100 rounded w-1/2"></div>
+                  <div className="flex justify-between pt-2">
+                    <div className="h-5 bg-neutral-200 rounded w-24"></div>
+                    <div className="h-5 bg-neutral-100 rounded w-16"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : products.length === 0 ? (
             <div className="bg-white rounded-3xl border border-neutral-200/90 p-10 sm:p-14 text-center space-y-4 shadow-xs">
               <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto border border-emerald-100 shadow-2xs">
                 <Package className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  Reserved for Real-World Community Postings
+                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider font-mono">
+                  Live Firebase Firestore Cloud Database
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-900 font-display pt-1">
-                  Catalog Open for Real-World Sellers!
+                  Ready for Real-World Product Ads!
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto leading-relaxed">
-                  All demo products have been cleared. Have gently used textbooks, kitchenware, audio gear, or clothing? List them in 60 seconds with 100% Escrow Protection.
+                  Ads posted here are written live to Google Firebase Firestore (<code className="text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded text-xs font-mono">easymart-8a580</code>) and can be viewed instantly on all devices globally.
                 </p>
               </div>
-              <div className="pt-2">
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   onClick={() => requireAuth('post a free ad', () => navigateTo('post-item'))}
                   className="px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/20 transition inline-flex items-center gap-2"
                 >
                   <Package className="w-4 h-4" />
-                  <span>Post the First Ad in your City</span>
+                  <span>Post the First Ad (+ Live Cloud Sync)</span>
                 </button>
               </div>
             </div>
