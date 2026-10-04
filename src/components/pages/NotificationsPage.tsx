@@ -6,7 +6,9 @@ import {
 import { useApp } from '../../context/AppContext';
 
 export const NotificationsPage: React.FC = () => {
-  const { notifications, markNotificationRead, markAllNotificationsRead, navigateTo } = useApp();
+  const { notifications, currentUser, markNotificationRead, markAllNotificationsRead, navigateTo } = useApp();
+
+  const userNotifications = notifications.filter(n => !n.userId || n.userId === currentUser.id);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -43,15 +45,15 @@ export const NotificationsPage: React.FC = () => {
         </button>
       </div>
 
-      {notifications.length === 0 ? (
+      {userNotifications.length === 0 ? (
         <div className="bg-white rounded-3xl border border-neutral-200 p-12 text-center space-y-3">
           <Bell className="w-10 h-10 text-neutral-300 mx-auto" />
           <h3 className="font-bold text-base text-neutral-800">No notifications yet</h3>
-          <p className="text-xs text-neutral-500">You will receive updates here when buyers negotiate or place orders.</p>
+          <p className="text-xs text-neutral-500">You will receive updates here when buyers negotiate, pay in escrow, or place orders.</p>
         </div>
       ) : (
         <div className="bg-white rounded-3xl border border-neutral-200/90 divide-y divide-neutral-100 overflow-hidden shadow-xs">
-          {notifications.map((n) => (
+          {userNotifications.map((n) => (
             <div
               key={n.id}
               onClick={() => {

@@ -20,6 +20,14 @@ import {
   deleteProductAdFromFirestore,
   incrementProductViewsInFirestore
 } from '../services/firebaseProductService';
+import {
+  subscribeToOrders,
+  saveOrderToFirestore,
+  updateOrderInFirestore,
+  subscribeToNotifications,
+  saveNotificationToFirestore,
+  markNotificationReadInFirestore
+} from '../services/firebaseOrderService';
 
 interface NavigationParams {
   productId?: string;
@@ -420,6 +428,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
     return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
   });
+
+  // Subscribe to real-time Google Firebase Firestore orders and notifications for global multi-device sync
+  useEffect(() => {
+    const unsubOrders = subscribeToOrders((cloudOrders) => {
+      if (cloudOrders && cloudOrders.length > 0) {
+        setOrders(cloudOrders);
+      }
+    });
+
+    const unsubNotifs = subscribeToNotifications((cloudNotifs) => {
+      if (cloudNotifs && cloudNotifs.length > 0) {
+        setNotifications((prev) => {
+          const map = new Map<string, Notification>();
+          prev.forEach(n => map.set(n.id, n));
+          cloudNotifs.forEach(n => map.set(n.id, n));
+          return Array.from(map.values()).sort((a, b) => b.id.localeCompare(a.id));
+        });
+      }
+    });
+
+    return () => {
+      unsubOrders();
+      unsubNotifs();
+    };
+  }, []);
 
   // Reports
   const [reports, setReports] = useState<Report[]>(() => {
@@ -926,8 +959,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders(prev => [newOrder, ...prev]);
 
-    // Mark product as sold or reserved
+    // Save order directly to live Firebase Firestore Cloud DB
+    saveOrderToFirestore(newOrder).catch((err) => {
+      console.error('Error saving order to Firestore:', err);
+    });
+
+    // Mark product as reserved in local state and live Firestore
     setProducts(prev => prev.map(p => p.id === orderData.productId ? { ...p, status: 'reserved' } : p));
+    updateProductAdInFirestore(orderData.productId, { status: 'reserved' }).catch(console.error);
 
     // Buyer Notification
     const buyerNotif: Notification = {
@@ -942,12 +981,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       linkId: newOrder.id
     };
 
-    // Seller Notification
+    // Seller Notification (Sent live to seller across all devices via Firestore)
     const sellerNotif: Notification = {
       id: `notif-${Date.now()}-2`,
       userId: orderData.product.sellerId,
       title: `You have a new sale! 📦`,
-      message: `${currentUser.name} ordered "${orderData.product.title}". Payment secured in Escrow. Please pack and dispatch via courier.`,
+      message: `${currentUser.name} ordered "${orderData.product.title}". ₹${orderData.amount} secured in Escrow. Please pack and dispatch via courier.`,
       type: 'order',
       read: false,
       timestamp: 'Just now',
@@ -956,11 +995,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setNotifications(prev => [buyerNotif, sellerNotif, ...prev]);
+    saveNotificationToFirestore(buyerNotif).catch(console.error);
+    saveNotificationToFirestore(sellerNotif).catch(console.error);
 
     return newOrder;
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus, trackingNumber?: string, courierPartner?: string) => {
+    let orderToSync: Order | null = null;
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
         const events = o.trackingEvents || [];
@@ -989,7 +1031,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         }
 
-        const updated = { 
+        const updated: Order = { 
           ...o, 
           status,
           trackingEvents: newEvents
@@ -1001,10 +1043,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updated.escrowReleaseTxnId = `PAYOUT-UPI-${Date.now()}`;
           updated.escrowReleasedAt = new Date().toISOString();
         }
+        orderToSync = updated;
         return updated;
       }
       return o;
     }));
+
+    if (orderToSync) {
+      updateOrderInFirestore(orderId, orderToSync).catch(console.error);
+    }
 
     showToast(`Order status updated to "${status.replace('_', ' ')}"`);
   };
@@ -1012,11 +1059,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const releaseEscrow = (orderId: string) => {
     const payoutTxnId = `PAYOUT-UPI-${Date.now()}`;
     const nowStr = new Date().toISOString();
+    let updatedOrder: Order | null = null;
 
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
         const events = o.trackingEvents || [];
-        return {
+        const newObj: Order = {
           ...o,
           status: 'delivered',
           escrowStatus: 'released_to_seller',
@@ -1032,9 +1080,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           ]
         };
+        updatedOrder = newObj;
+        return newObj;
       }
       return o;
     }));
+
+    if (updatedOrder) {
+      updateOrderInFirestore(orderId, updatedOrder).catch(console.error);
+      const ord = updatedOrder as Order;
+      updateProductAdInFirestore(ord.productId, { status: 'sold' }).catch(console.error);
+
+      // Notify seller of released payout
+      const sellerPayoutNotif: Notification = {
+        id: `notif-${Date.now()}-seller-payout`,
+        userId: ord.sellerId,
+        title: `Escrow Payout Disbursed! 💰`,
+        message: `₹${ord.amount} has been released to your UPI ID (${ord.sellerUpiId}). Reference ID: ${payoutTxnId}`,
+        type: 'order',
+        read: false,
+        timestamp: 'Just now',
+        linkPage: 'sales',
+        linkId: ord.id
+      };
+      saveNotificationToFirestore(sellerPayoutNotif).catch(console.error);
+    }
+
     showToast('Parcel delivery confirmed! Escrow funds released to seller UPI.', 'success');
   };
 
@@ -1050,11 +1121,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const payoutTxnId = `PAYOUT-UPI-${Date.now()}`;
     const nowStr = new Date().toISOString();
+    let updatedOrder: Order | null = null;
 
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
         const events = o.trackingEvents || [];
-        return {
+        const newObj: Order = {
           ...o,
           status: 'delivered',
           escrowStatus: 'released_to_seller',
@@ -1070,9 +1142,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           ]
         };
+        updatedOrder = newObj;
+        return newObj;
       }
       return o;
     }));
+
+    if (updatedOrder) {
+      updateOrderInFirestore(orderId, updatedOrder).catch(console.error);
+      updateProductAdInFirestore(order.productId, { status: 'sold' }).catch(console.error);
+
+      // Notify seller of successful payout
+      const sellerPayoutNotif: Notification = {
+        id: `notif-${Date.now()}-seller-payout`,
+        userId: order.sellerId,
+        title: `Handover Verified & Payout Disbursed! 💰`,
+        message: `6-Digit code verified! ₹${order.amount} has been released to your UPI ID (${order.sellerUpiId}). Reference ID: ${payoutTxnId}`,
+        type: 'order',
+        read: false,
+        timestamp: 'Just now',
+        linkPage: 'sales',
+        linkId: order.id
+      };
+      saveNotificationToFirestore(sellerPayoutNotif).catch(console.error);
+    }
 
     showToast(`Code Verified! ₹${order.amount} credited to seller UPI (${order.sellerUpiId}).`, 'success');
     return { success: true, message: 'OTP verified! Escrow payout completed.' };
@@ -1257,6 +1350,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Notifications
   const markNotificationRead = (notificationId: string) => {
     setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+    markNotificationReadInFirestore(notificationId).catch(console.error);
   };
 
   const markAllNotificationsRead = () => {

@@ -24,7 +24,8 @@ export const Header: React.FC = () => {
   const userRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const unreadNotifsCount = notifications.filter(n => !n.read).length;
+  const userNotifications = notifications.filter(n => !n.userId || n.userId === currentUser.id);
+  const unreadNotifsCount = userNotifications.filter(n => !n.read).length;
 
   useEffect(() => {
     setLocalSearch(searchQuery);
@@ -204,23 +205,29 @@ export const Header: React.FC = () => {
                         </button>
                       </div>
                       <div className="max-h-64 overflow-y-auto divide-y divide-neutral-50 py-1">
-                        {notifications.slice(0, 4).map(n => (
-                          <div 
-                            key={n.id}
-                            onClick={() => {
-                              markNotificationRead(n.id);
-                              if (n.linkPage) navigateTo(n.linkPage as any, { productId: n.linkId, conversationId: n.linkId });
-                              setIsNotifOpen(false);
-                            }}
-                            className={`p-2.5 rounded-xl cursor-pointer transition text-left hover:bg-neutral-50 ${!n.read ? 'bg-emerald-50/50' : ''}`}
-                          >
-                            <div className="text-xs font-bold text-neutral-900 flex items-center justify-between">
-                              <span>{n.title}</span>
-                              <span className="text-[10px] text-neutral-400 font-normal">{n.timestamp}</span>
-                            </div>
-                            <p className="text-[11px] text-neutral-600 mt-0.5 line-clamp-2">{n.message}</p>
+                        {userNotifications.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-neutral-400">
+                            No notifications yet
                           </div>
-                        ))}
+                        ) : (
+                          userNotifications.slice(0, 5).map(n => (
+                            <div 
+                              key={n.id}
+                              onClick={() => {
+                                markNotificationRead(n.id);
+                                if (n.linkPage) navigateTo(n.linkPage as any, { productId: n.linkId, conversationId: n.linkId });
+                                setIsNotifOpen(false);
+                              }}
+                              className={`p-2.5 rounded-xl cursor-pointer transition text-left hover:bg-neutral-50 ${!n.read ? 'bg-emerald-50/50' : ''}`}
+                            >
+                              <div className="text-xs font-bold text-neutral-900 flex items-center justify-between">
+                                <span>{n.title}</span>
+                                <span className="text-[10px] text-neutral-400 font-normal">{n.timestamp}</span>
+                              </div>
+                              <p className="text-[11px] text-neutral-600 mt-0.5 line-clamp-2">{n.message}</p>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   )}
