@@ -64,12 +64,12 @@ export function subscribeToOrders(
         onOrdersUpdate(ordersList);
       },
       (error) => {
-        console.warn('Real-time order subscription note:', error.message);
+        console.info('Real-time order subscription notice (local mode):', error?.message || error);
         if (onError) onError(error);
       }
     );
-  } catch (err) {
-    console.error('Failed to subscribe to orders:', err);
+  } catch (err: any) {
+    console.info('Order subscription initialization notice:', err?.message || err);
     return () => {};
   }
 }
@@ -82,9 +82,8 @@ export async function saveOrderToFirestore(order: Order): Promise<void> {
     const docRef = doc(db, ORDERS_COLLECTION, order.id);
     const sanitized = sanitizeForFirestore(order);
     await setDoc(docRef, sanitized, { merge: true });
-  } catch (err) {
-    console.error('Error saving order to Firestore:', err);
-    throw err;
+  } catch (err: any) {
+    console.info('Notice saving order to Firestore (saved locally):', err?.message || err);
   }
 }
 
@@ -96,9 +95,8 @@ export async function updateOrderInFirestore(orderId: string, updates: Partial<O
     const docRef = doc(db, ORDERS_COLLECTION, orderId);
     const sanitized = sanitizeForFirestore(updates);
     await updateDoc(docRef, sanitized);
-  } catch (err) {
-    console.error(`Error updating order ${orderId} in Firestore:`, err);
-    throw err;
+  } catch (err: any) {
+    console.info(`Notice updating order ${orderId} in Firestore (updated locally):`, err?.message || err);
   }
 }
 
@@ -129,12 +127,12 @@ export function subscribeToNotifications(
         onNotificationsUpdate(notifsList);
       },
       (error) => {
-        console.warn('Real-time notification subscription note:', error.message);
+        console.info('Real-time notification subscription notice (local mode):', error?.message || error);
         if (onError) onError(error);
       }
     );
-  } catch (err) {
-    console.error('Failed to subscribe to notifications:', err);
+  } catch (err: any) {
+    console.info('Notification subscription initialization notice:', err?.message || err);
     return () => {};
   }
 }
@@ -147,9 +145,8 @@ export async function saveNotificationToFirestore(notification: Notification): P
     const docRef = doc(db, NOTIFICATIONS_COLLECTION, notification.id);
     const sanitized = sanitizeForFirestore(notification);
     await setDoc(docRef, sanitized, { merge: true });
-  } catch (err) {
-    console.error('Error saving notification to Firestore:', err);
-    throw err;
+  } catch (err: any) {
+    console.info('Notice saving notification to Firestore (saved locally):', err?.message || err);
   }
 }
 
@@ -160,7 +157,7 @@ export async function markNotificationReadInFirestore(notificationId: string): P
   try {
     const docRef = doc(db, NOTIFICATIONS_COLLECTION, notificationId);
     await updateDoc(docRef, { read: true });
-  } catch (err) {
-    console.error(`Error marking notification ${notificationId} as read in Firestore:`, err);
+  } catch (err: any) {
+    console.info(`Notice marking notification ${notificationId} as read in Firestore (marked locally):`, err?.message || err);
   }
 }

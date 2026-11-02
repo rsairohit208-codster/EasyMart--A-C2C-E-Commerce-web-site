@@ -1,4 +1,5 @@
 import { Product, ProductCategory, User, Review, Order, Notification, Conversation, ChatMessage } from '../types';
+import { EXPANDED_CATALOG_PRODUCTS } from './catalogProducts';
 
 export const INDIAN_STATES = [
   'Andhra Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Delhi NCR', 'Goa', 'Gujarat', 
@@ -18,7 +19,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'books-study',
     iconName: 'BookOpen',
     description: 'Textbooks, UPSC prep, competitive exam guides, novels & self-help',
-    itemCount: 48,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -27,7 +28,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'kitchen-dining',
     iconName: 'Utensils',
     description: 'Spice boxes, flasks, electric kettles, tiffins & compact cooking appliances',
-    itemCount: 62,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -36,7 +37,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'home-decor',
     iconName: 'Home',
     description: 'Cotton bedsheets, brass diyas, diffusers, cushions & handmade pottery',
-    itemCount: 54,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -45,7 +46,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'mobile-audio',
     iconName: 'Headphones',
     description: 'Earphones, power banks, chargers, laptop stands & lightweight peripherals',
-    itemCount: 89,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -54,7 +55,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'fashion-apparel',
     iconName: 'Shirt',
     description: 'Cotton kurtas, dupattas, daily wear tees, watches, bags & footwear',
-    itemCount: 71,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -63,7 +64,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'personal-care',
     iconName: 'Sparkles',
     description: 'Trimmers, hair stylers, skincare organizers & grooming essentials',
-    itemCount: 39,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -72,7 +73,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'kids-baby',
     iconName: 'Smile',
     description: 'Non-toxic toys, flashcards, soft storybooks, baby feeding sets',
-    itemCount: 33,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -81,7 +82,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'sports-fitness',
     iconName: 'Activity',
     description: 'Yoga mats, resistance bands, badminton sets & skipping ropes',
-    itemCount: 41,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -90,7 +91,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'crafts-gifts',
     iconName: 'Gift',
     description: 'Handcrafted journals, jute bags, festive decor, crochet & art prints',
-    itemCount: 45,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80'
   },
   {
@@ -99,7 +100,7 @@ export const CATEGORIES: ProductCategory[] = [
     slug: 'pantry-tea',
     iconName: 'Coffee',
     description: 'Sealed Darjeeling tea tins, Kashmiri saffron, organic coffee beans',
-    itemCount: 28,
+    itemCount: 7,
     image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&q=80'
   }
 ];
@@ -226,10 +227,192 @@ export const SAMPLE_STARTER_USERS: User[] = [
     password: 'admin123',
     role: 'admin',
     savedAddresses: []
+  },
+  {
+    id: 'usr-seller-ananya',
+    name: 'Ananya Sen',
+    email: 'ananya.sen@example.in',
+    phone: '+91 97401 22394',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    rating: 4.92,
+    reviewCount: 29,
+    isVerified: true,
+    memberSince: 'Aug 2023',
+    bio: 'Designer and home curator in Indiranagar, Bengaluru. Offering gently used books, planters, and audio gadgets.',
+    upiId: 'ananya.sen@okaxis',
+    password: 'password123',
+    role: 'seller',
+    savedAddresses: [
+      {
+        id: 'addr-5',
+        fullName: 'Ananya Sen',
+        phone: '+91 97401 22394',
+        addressLine1: '12th Main Road, HAL 2nd Stage, Indiranagar',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        pincode: '560038',
+        isDefault: true,
+        label: 'Home'
+      }
+    ]
+  },
+  {
+    id: 'usr-seller-rohit',
+    name: 'Rohit Deshmukh',
+    email: 'rohit.d@example.in',
+    phone: '+91 98205 61120',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    rating: 4.85,
+    reviewCount: 19,
+    isVerified: true,
+    memberSince: 'Nov 2023',
+    bio: 'Fitness and tech enthusiast in Powai, Mumbai. Decluttering study books, weights, and electronics.',
+    upiId: 'rohit.d@paytm',
+    password: 'password123',
+    role: 'seller',
+    savedAddresses: [
+      {
+        id: 'addr-6',
+        fullName: 'Rohit Deshmukh',
+        phone: '+91 98205 61120',
+        addressLine1: 'Hiranandani Gardens, Powai',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        pincode: '400076',
+        isDefault: true,
+        label: 'Home'
+      }
+    ]
+  },
+  {
+    id: 'usr-seller-sneha',
+    name: 'Sneha Sharma',
+    email: 'sneha.sharma@example.in',
+    phone: '+91 94140 88721',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    rating: 4.97,
+    reviewCount: 41,
+    isVerified: true,
+    memberSince: 'Feb 2023',
+    bio: 'Artisan craft promoter and collector in C-Scheme, Jaipur. Authentic handicrafts, brassware, and ethnic wear.',
+    upiId: 'sneha.sharma@ybl',
+    password: 'password123',
+    role: 'seller',
+    savedAddresses: [
+      {
+        id: 'addr-7',
+        fullName: 'Sneha Sharma',
+        phone: '+91 94140 88721',
+        addressLine1: 'B-12, Ashok Marg, C-Scheme',
+        city: 'Jaipur',
+        state: 'Rajasthan',
+        pincode: '302015',
+        isDefault: true,
+        label: 'Home'
+      }
+    ]
+  },
+  {
+    id: 'usr-seller-karthik',
+    name: 'Karthik Sundaram',
+    email: 'karthik.s@example.in',
+    phone: '+91 98402 33419',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=256&q=80',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+    rating: 4.91,
+    reviewCount: 25,
+    isVerified: true,
+    memberSince: 'Apr 2023',
+    bio: 'Avid reader & sports coach in Mylapore, Chennai. Traditional cookware, books, and sports accessories.',
+    upiId: 'karthik.s@okicici',
+    password: 'password123',
+    role: 'seller',
+    savedAddresses: [
+      {
+        id: 'addr-8',
+        fullName: 'Karthik Sundaram',
+        phone: '+91 98402 33419',
+        addressLine1: 'Kutchery Road, Mylapore',
+        city: 'Chennai',
+        state: 'Tamil Nadu',
+        pincode: '600028',
+        isDefault: true,
+        label: 'Home'
+      }
+    ]
+  },
+  {
+    id: 'usr-seller-fatima',
+    name: 'Fatima Begum',
+    email: 'fatima.b@example.in',
+    phone: '+91 99890 44582',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    rating: 4.94,
+    reviewCount: 31,
+    isVerified: true,
+    memberSince: 'May 2023',
+    bio: 'Mom and home creator in Banjara Hills, Hyderabad. Baby essentials, cushion covers, and authentic spices.',
+    upiId: 'fatima.b@oksbi',
+    password: 'password123',
+    role: 'seller',
+    savedAddresses: [
+      {
+        id: 'addr-9',
+        fullName: 'Fatima Begum',
+        phone: '+91 99890 44582',
+        addressLine1: 'Road No. 12, Banjara Hills',
+        city: 'Hyderabad',
+        state: 'Telangana',
+        pincode: '500008',
+        isDefault: true,
+        label: 'Home'
+      }
+    ]
+  },
+  {
+    id: 'usr-seller-deb',
+    name: 'Debashis Roy',
+    email: 'debashis.r@example.in',
+    phone: '+91 98310 77123',
+    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=256&q=80',
+    city: 'Kolkata',
+    state: 'West Bengal',
+    rating: 4.89,
+    reviewCount: 16,
+    isVerified: true,
+    memberSince: 'Oct 2023',
+    bio: 'Literature and handloom enthusiast in Ballygunge, Kolkata. Handcrafted jute bags, textiles, and spices.',
+    upiId: 'debashis.roy@upi',
+    password: 'password123',
+    role: 'seller',
+    savedAddresses: [
+      {
+        id: 'addr-10',
+        fullName: 'Debashis Roy',
+        phone: '+91 98310 77123',
+        addressLine1: 'Ballygunge Circular Road',
+        city: 'Kolkata',
+        state: 'West Bengal',
+        pincode: '700019',
+        isDefault: true,
+        label: 'Home'
+      }
+    ]
   }
 ];
 
-export const SAMPLE_STARTER_PRODUCTS: Product[] = [
+export const SAMPLE_STARTER_PRODUCTS: Product[] = EXPANDED_CATALOG_PRODUCTS;
+
+const _LEGACY_PRODUCTS: Product[] = [
   {
     id: 'prod-1',
     title: 'Indian Polity by M. Laxmikanth (7th Edition) - Clean Condition',
@@ -876,7 +1059,7 @@ export const SAMPLE_STARTER_NOTIFICATIONS: Notification[] = [
 // 100% REAL-WORLD EMPTY REPOSITORIES FOR COMMUNITY LAUNCH
 // All lists start pristine and reserved for genuine peer-to-peer users
 export const INITIAL_USERS: User[] = [];
-export const INITIAL_PRODUCTS: Product[] = [];
+export const INITIAL_PRODUCTS: Product[] = EXPANDED_CATALOG_PRODUCTS;
 export const INITIAL_ORDERS: Order[] = [];
 export const INITIAL_CONVERSATIONS: Conversation[] = [];
 export const INITIAL_CHAT_MESSAGES: Record<string, ChatMessage[]> = {};

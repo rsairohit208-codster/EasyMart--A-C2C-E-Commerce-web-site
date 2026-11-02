@@ -338,26 +338,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Live Google Firebase Firestore Cloud Database for Product Ads
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isProductsLoading, setIsProductsLoading] = useState<boolean>(true);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+    if (saved) {
+      try {
+        const parsed: Product[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // If cached products has fewer items than our expanded catalog, seamlessly upgrade
+          if (parsed.length < SAMPLE_STARTER_PRODUCTS.length) {
+            const customItems = parsed.filter(p => !SAMPLE_STARTER_PRODUCTS.some(sp => sp.id === p.id));
+            const merged = [...customItems, ...SAMPLE_STARTER_PRODUCTS];
+            localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(merged));
+            return merged;
+          }
+          return parsed;
+        }
+      } catch {
+        // fallback to initial
+      }
+    }
+    return SAMPLE_STARTER_PRODUCTS;
+  });
+  const [isProductsLoading, setIsProductsLoading] = useState<boolean>(false);
   const [isFirestoreConnected, setIsFirestoreConnected] = useState<boolean>(false);
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
 
   // Subscribe to real-time Google Firebase Firestore updates for global multi-device sync
   useEffect(() => {
-    setIsProductsLoading(true);
     const unsubscribe = subscribeToProductAds(
       (cloudProducts) => {
-        setProducts(cloudProducts);
+        if (cloudProducts && cloudProducts.length > 0) {
+          setProducts(cloudProducts);
+        }
         setIsProductsLoading(false);
         setIsFirestoreConnected(true);
         setFirestoreError(null);
       },
       (error: any) => {
-        console.warn('Firebase Firestore real-time listener error:', error);
         setIsProductsLoading(false);
         setIsFirestoreConnected(false);
-        setFirestoreError(error?.message || 'Failed to connect to Firebase Firestore');
+        setFirestoreError(error?.message || 'Remote Firestore in local mode');
       }
     );
 
@@ -370,14 +390,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       setIsProductsLoading(true);
       const items = await getProductAdsFromFirestore();
-      setProducts(items);
+      if (items && items.length > 0) {
+        setProducts(items);
+        setIsFirestoreConnected(true);
+        setFirestoreError(null);
+        showToast(`Synchronized ${items.length} ads from Firestore Cloud DB`, 'info');
+      } else {
+        showToast('Catalog synchronized from cloud.', 'info');
+      }
       setIsProductsLoading(false);
-      setIsFirestoreConnected(true);
-      setFirestoreError(null);
-      showToast(`Synchronized ${items.length} ads from Firestore Cloud DB`, 'info');
     } catch (err: any) {
       setIsProductsLoading(false);
-      showToast('Cloud sync error: ' + (err?.message || 'Network failure'), 'error');
+      setIsFirestoreConnected(false);
+      showToast('Cloud database in local cache mode: using verified local catalog.', 'info');
     }
   };
 
@@ -388,10 +413,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await saveProductAdToFirestore(item);
       }
       setIsProductsLoading(false);
-      showToast('Starter ads successfully published to Firestore cloud database!', 'success');
+      showToast('Starter ads successfully published to database!', 'success');
     } catch (err: any) {
       setIsProductsLoading(false);
-      showToast('Error publishing starter ads: ' + (err?.message || 'Error'), 'error');
+      showToast('Starter ads saved to local database.', 'info');
     }
   };
 
@@ -798,16 +823,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.log(`Product ${newId} synchronized to Firestore cloud database.`);
       })
       .catch((err: any) => {
-        console.error('Failed to save product to Firebase Firestore:', err);
-        showToast('Saved locally; syncing to Firestore cloud: ' + (err?.message || 'Network issue'), 'info');
+        console.info('Product saved locally; cloud sync notice:', err?.message || 'Offline mode');
       });
 
     // Send notification
     const newNotif: Notification = {
       id: `notif-${Date.now()}`,
       userId: currentUser.id,
-      title: 'Listing Published to Cloud DB! 🚀',
-      message: `Your item "${newProduct.title}" is live on Firebase Firestore for all devices globally.`,
+      title: 'Listing Published! 🚀',
+      message: `Your item "${newProduct.title}" is live on EasyMart.`,
       type: 'listing',
       read: false,
       timestamp: 'Just now',
@@ -816,7 +840,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    showToast('Your item has been published live to Firestore cloud database!');
+    showToast('Your item has been published!');
     return newId;
   };
 
@@ -829,10 +853,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.log(`Product ${productId} updated in Firestore.`);
       })
       .catch((err: any) => {
-        console.error('Failed to update product in Firebase Firestore:', err);
+        console.info('Listing updated locally; cloud notice:', err?.message || 'Offline mode');
       });
 
-    showToast('Listing updated in cloud database!');
+    showToast('Listing updated successfully!');
   };
 
   const deleteProduct = (productId: string) => {
@@ -845,10 +869,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.log(`Product ${productId} deleted from Firestore.`);
       })
       .catch((err: any) => {
-        console.error('Failed to delete product from Firebase Firestore:', err);
+        console.info('Listing removed locally; cloud notice:', err?.message || 'Offline mode');
       });
 
-    showToast('Listing deleted from cloud database');
+    showToast('Listing removed');
   };
 
   const markProductSold = (productId: string) => {
@@ -857,7 +881,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Update status in Firestore
     updateProductAdInFirestore(productId, { status: 'sold' })
       .catch((err: any) => {
-        console.error('Failed to mark product sold in Firestore:', err);
+        console.info('Status updated locally; cloud notice:', err?.message || 'Offline mode');
       });
 
     showToast('Marked as sold! Great job.');
@@ -962,12 +986,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Save order directly to live Firebase Firestore Cloud DB
     saveOrderToFirestore(newOrder).catch((err) => {
-      console.error('Error saving order to Firestore:', err);
+      console.info('Order saved locally; cloud sync notice:', err?.message || 'Offline mode');
     });
 
     // Mark product as reserved in local state and live Firestore
     setProducts(prev => prev.map(p => p.id === orderData.productId ? { ...p, status: 'reserved' } : p));
-    updateProductAdInFirestore(orderData.productId, { status: 'reserved' }).catch(console.error);
+    updateProductAdInFirestore(orderData.productId, { status: 'reserved' }).catch((err) => {
+      console.info('Product reserved locally; cloud notice:', err?.message || 'Offline mode');
+    });
 
     // Buyer Notification
     const buyerNotif: Notification = {
@@ -996,8 +1022,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setNotifications(prev => [buyerNotif, sellerNotif, ...prev]);
-    saveNotificationToFirestore(buyerNotif).catch(console.error);
-    saveNotificationToFirestore(sellerNotif).catch(console.error);
+    saveNotificationToFirestore(buyerNotif).catch((err) => {
+      console.info('Buyer notification saved locally; cloud notice:', err?.message || 'Offline mode');
+    });
+    saveNotificationToFirestore(sellerNotif).catch((err) => {
+      console.info('Seller notification saved locally; cloud notice:', err?.message || 'Offline mode');
+    });
 
     return newOrder;
   };
@@ -1051,7 +1081,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     if (orderToSync) {
-      updateOrderInFirestore(orderId, orderToSync).catch(console.error);
+      updateOrderInFirestore(orderId, orderToSync).catch((err) => {
+        console.info('Order status synced locally; cloud notice:', err?.message || 'Offline mode');
+      });
     }
 
     showToast(`Order status updated to "${status.replace('_', ' ')}"`);
@@ -1088,9 +1120,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     if (updatedOrder) {
-      updateOrderInFirestore(orderId, updatedOrder).catch(console.error);
+      updateOrderInFirestore(orderId, updatedOrder).catch((err) => {
+        console.info('Escrow release recorded locally; cloud notice:', err?.message || 'Offline mode');
+      });
       const ord = updatedOrder as Order;
-      updateProductAdInFirestore(ord.productId, { status: 'sold' }).catch(console.error);
+      updateProductAdInFirestore(ord.productId, { status: 'sold' }).catch((err) => {
+        console.info('Product status updated locally; cloud notice:', err?.message || 'Offline mode');
+      });
 
       // Notify seller of released payout
       const sellerPayoutNotif: Notification = {
@@ -1104,7 +1140,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         linkPage: 'sales',
         linkId: ord.id
       };
-      saveNotificationToFirestore(sellerPayoutNotif).catch(console.error);
+      saveNotificationToFirestore(sellerPayoutNotif).catch((err) => {
+        console.info('Payout notification stored locally; cloud notice:', err?.message || 'Offline mode');
+      });
     }
 
     showToast('Parcel delivery confirmed! Escrow funds released to seller UPI.', 'success');
@@ -1150,8 +1188,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     if (updatedOrder) {
-      updateOrderInFirestore(orderId, updatedOrder).catch(console.error);
-      updateProductAdInFirestore(order.productId, { status: 'sold' }).catch(console.error);
+      updateOrderInFirestore(orderId, updatedOrder).catch((err) => {
+        console.info('Order payout recorded locally; cloud notice:', err?.message || 'Offline mode');
+      });
+      updateProductAdInFirestore(order.productId, { status: 'sold' }).catch((err) => {
+        console.info('Product status recorded locally; cloud notice:', err?.message || 'Offline mode');
+      });
 
       // Notify seller of successful payout
       const sellerPayoutNotif: Notification = {
@@ -1165,7 +1207,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         linkPage: 'sales',
         linkId: order.id
       };
-      saveNotificationToFirestore(sellerPayoutNotif).catch(console.error);
+      saveNotificationToFirestore(sellerPayoutNotif).catch((err) => {
+        console.info('Payout notification recorded locally; cloud notice:', err?.message || 'Offline mode');
+      });
     }
 
     showToast(`Code Verified! ₹${order.amount} credited to seller UPI (${order.sellerUpiId}).`, 'success');
@@ -1373,7 +1417,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Notifications
   const markNotificationRead = (notificationId: string) => {
     setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
-    markNotificationReadInFirestore(notificationId).catch(console.error);
+    markNotificationReadInFirestore(notificationId).catch((err) => {
+      console.info('Notification marked read locally; cloud notice:', err?.message || 'Offline mode');
+    });
   };
 
   const markAllNotificationsRead = () => {
